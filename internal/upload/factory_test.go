@@ -70,10 +70,3 @@ func TestNewClientFromConfig(t *testing.T) {
 		})
 	}
 }
-
-
-
-
-
-
-

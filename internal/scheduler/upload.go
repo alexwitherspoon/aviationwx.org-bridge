@@ -15,14 +15,14 @@ import (
 // UploadWorker handles uploading queued images to the server
 // Uses round-robin across camera queues with fail2ban-aware retry logic
 type UploadWorker struct {
-	queues       map[string]*queue.Queue // Camera ID -> Queue
-	queueOrder   []string                // Order for round-robin
-	configs      map[string]CameraConfig // Camera ID -> Config
-	uploader     upload.Client
-	ctx          context.Context
-	cancel       context.CancelFunc
-	mu           sync.RWMutex
-	logger       Logger
+	queues     map[string]*queue.Queue // Camera ID -> Queue
+	queueOrder []string                // Order for round-robin
+	configs    map[string]CameraConfig // Camera ID -> Config
+	uploader   upload.Client
+	ctx        context.Context
+	cancel     context.CancelFunc
+	mu         sync.RWMutex
+	logger     Logger
 
 	// Fail2ban protection
 	minUploadInterval time.Duration // Minimum time between uploads (rate limit)
@@ -30,14 +30,14 @@ type UploadWorker struct {
 	retryDelay        time.Duration // Delay before single retry
 
 	// Statistics
-	uploadsTotal     int64
-	uploadsSuccess   int64
-	uploadsFailed    int64
-	uploadsRetried   int64
-	authFailures     int64
-	lastUploadTime   time.Time
-	lastSuccessTime  time.Time
-	lastFailureTime  time.Time
+	uploadsTotal    int64
+	uploadsSuccess  int64
+	uploadsFailed   int64
+	uploadsRetried  int64
+	authFailures    int64
+	lastUploadTime  time.Time
+	lastSuccessTime time.Time
+	lastFailureTime time.Time
 
 	// Per-camera failure tracking (for fail2ban awareness)
 	cameraFailures map[string]*uploadFailureState
@@ -141,15 +141,15 @@ func (w *UploadWorker) GetStats() UploadStats {
 	}
 
 	return UploadStats{
-		UploadsTotal:    w.uploadsTotal,
-		UploadsSuccess:  w.uploadsSuccess,
-		UploadsFailed:   w.uploadsFailed,
-		UploadsRetried:  w.uploadsRetried,
-		AuthFailures:    w.authFailures,
-		QueuedImages:    queuedTotal,
-		LastUploadTime:  w.lastUploadTime,
-		LastSuccessTime: w.lastSuccessTime,
-		LastFailureTime: w.lastFailureTime,
+		UploadsTotal:     w.uploadsTotal,
+		UploadsSuccess:   w.uploadsSuccess,
+		UploadsFailed:    w.uploadsFailed,
+		UploadsRetried:   w.uploadsRetried,
+		AuthFailures:     w.authFailures,
+		QueuedImages:     queuedTotal,
+		LastUploadTime:   w.lastUploadTime,
+		LastSuccessTime:  w.lastSuccessTime,
+		LastFailureTime:  w.lastFailureTime,
 		UploadRatePerMin: uploadRate,
 	}
 }
@@ -393,4 +393,3 @@ func (w *UploadWorker) recordFailure(cameraID string, err error) {
 func readImageFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
-

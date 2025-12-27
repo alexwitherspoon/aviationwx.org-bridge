@@ -125,7 +125,7 @@ func (s *Scheduler) processCamera(cam camera.Camera, state *CameraState) {
 	ResetBackoff(state)
 	state.LastSuccess = time.Now()
 	s.mu.Unlock()
-	
+
 	// Stamp EXIF timestamp if time is healthy
 	// This happens before upload to ensure timestamp is accurate
 	captureTime := time.Now()
@@ -137,7 +137,7 @@ func (s *Scheduler) processCamera(cam camera.Camera, state *CameraState) {
 		}
 		// If EXIF stamping fails, continue with original data (fail gracefully)
 	}
-	
+
 	// Upload the fresh image
 	// Use remote path from config, default to camera ID if not set
 	remotePath := camConfig.RemotePath
@@ -150,7 +150,7 @@ func (s *Scheduler) processCamera(cam camera.Camera, state *CameraState) {
 		}
 		remotePath += "latest.jpg"
 	}
-	
+
 	uploadErr := s.uploader.Upload(remotePath, imageData)
 	if uploadErr != nil {
 		// Upload failed - but we already captured fresh image

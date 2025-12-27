@@ -714,7 +714,3 @@ func (s *Server) validateConfig(cfg *config.Config) error {
 
 	return nil
 }
-
-
-
-

@@ -12,9 +12,9 @@ func TestNewTimeHealth(t *testing.T) {
 		CheckIntervalSeconds: 300,
 		MaxOffsetSeconds:     5,
 	}
-	
+
 	th := NewTimeHealth(config)
-	
+
 	if th == nil {
 		t.Fatal("NewTimeHealth() returned nil")
 	}
@@ -33,9 +33,9 @@ func TestNewTimeHealth_Defaults(t *testing.T) {
 	config := Config{
 		Enabled: true,
 	}
-	
+
 	th := NewTimeHealth(config)
-	
+
 	if th.checkInterval != 300*time.Second {
 		t.Errorf("checkInterval = %v, want 300s (default)", th.checkInterval)
 	}
@@ -52,17 +52,17 @@ func TestTimeHealth_IsHealthy(t *testing.T) {
 		Enabled: true,
 	}
 	th := NewTimeHealth(config)
-	
+
 	// Should start as unhealthy
 	if th.IsHealthy() {
 		t.Error("Should start as unhealthy")
 	}
-	
+
 	// Manually set healthy
 	th.mu.Lock()
 	th.healthy = true
 	th.mu.Unlock()
-	
+
 	if !th.IsHealthy() {
 		t.Error("Should be healthy after setting")
 	}
@@ -73,17 +73,17 @@ func TestTimeHealth_GetOffset(t *testing.T) {
 		Enabled: true,
 	}
 	th := NewTimeHealth(config)
-	
+
 	offset := th.GetOffset()
 	if offset != 0 {
 		t.Errorf("Initial offset = %v, want 0", offset)
 	}
-	
+
 	// Manually set offset
 	th.mu.Lock()
 	th.offset = 2 * time.Second
 	th.mu.Unlock()
-	
+
 	offset = th.GetOffset()
 	if offset != 2*time.Second {
 		t.Errorf("Offset = %v, want 2s", offset)
@@ -95,7 +95,7 @@ func TestTimeHealth_GetStatus(t *testing.T) {
 		Enabled: true,
 	}
 	th := NewTimeHealth(config)
-	
+
 	status := th.GetStatus()
 	if status.Healthy {
 		t.Error("Status should start as unhealthy")
@@ -130,7 +130,7 @@ func TestAbsDuration(t *testing.T) {
 			expected: 0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := absDuration(tt.input)
@@ -140,11 +140,3 @@ func TestAbsDuration(t *testing.T) {
 		})
 	}
 }
-
-
-
-
-
-
-
-

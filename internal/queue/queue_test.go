@@ -141,7 +141,7 @@ func TestQueue_ExpireOldImages(t *testing.T) {
 	}
 
 	imageData := createTestJPEG(1024)
-	
+
 	// Enqueue images now (they'll expire in 2 seconds)
 	for i := 0; i < 3; i++ {
 		ts := time.Now().UTC().Add(time.Duration(i) * time.Millisecond)
@@ -149,7 +149,7 @@ func TestQueue_ExpireOldImages(t *testing.T) {
 			t.Fatalf("Enqueue failed: %v", err)
 		}
 	}
-	
+
 	initialCount := q.state.ImageCount
 	if initialCount != 3 {
 		t.Fatalf("expected 3 images, got %d", initialCount)
@@ -488,7 +488,7 @@ func createTestJPEG(size int) []byte {
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 		0x08, 0x09, 0x0A, 0x0B,
 		0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F, 0x00, // SOS
-		0x7F, // pixel data
+		0x7F,       // pixel data
 		0xFF, 0xD9, // EOI
 	}
 	return minimalJPEG
@@ -531,4 +531,3 @@ func BenchmarkQueue_Dequeue(b *testing.B) {
 		_, _ = q.Dequeue()
 	}
 }
-

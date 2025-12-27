@@ -223,6 +223,3 @@ func TestDefaultWebConsole(t *testing.T) {
 		t.Errorf("Password = %v, want aviationwx", wc.Password)
 	}
 }
-
-
-

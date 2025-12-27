@@ -46,9 +46,9 @@ func TestLogger_Levels(t *testing.T) {
 	})
 
 	tests := []struct {
-		name   string
-		fn     func(string, ...interface{})
-		level  string
+		name  string
+		fn    func(string, ...interface{})
+		level string
 	}{
 		{"debug", l.Debug, "DEBUG"},
 		{"info", l.Info, "INFO"},
@@ -174,6 +174,3 @@ func TestPackageLevelFunctions(t *testing.T) {
 		t.Error("should contain error msg")
 	}
 }
-
-
-

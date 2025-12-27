@@ -271,7 +271,7 @@ func TestReadEXIFTimestamp(t *testing.T) {
 
 	// Try to read it back
 	readTime, ok := ReadEXIFTimestamp(result.Data)
-	
+
 	// Note: This may or may not work depending on EXIF parsing implementation
 	// The test documents expected behavior
 	t.Logf("ReadEXIFTimestamp: ok=%v, time=%v", ok, readTime)
@@ -279,9 +279,9 @@ func TestReadEXIFTimestamp(t *testing.T) {
 
 func TestReadEXIFTimestamp_NoEXIF(t *testing.T) {
 	imageData := createTestJPEG(1024)
-	
+
 	readTime, ok := ReadEXIFTimestamp(imageData)
-	
+
 	if ok {
 		t.Errorf("Expected no EXIF timestamp, got %v", readTime)
 	}
@@ -289,9 +289,9 @@ func TestReadEXIFTimestamp_NoEXIF(t *testing.T) {
 
 func TestReadEXIFTimestamp_NonJPEG(t *testing.T) {
 	data := []byte("not a jpeg")
-	
+
 	_, ok := ReadEXIFTimestamp(data)
-	
+
 	if ok {
 		t.Error("Should not find timestamp in non-JPEG data")
 	}
@@ -352,7 +352,7 @@ func TestInjectEXIF(t *testing.T) {
 func createTestJPEG(size int) []byte {
 	// Minimal valid JPEG structure:
 	// SOI + APP0 (JFIF) + DQT + SOF0 + DHT + SOS + image data + EOI
-	
+
 	// This is a minimal 1x1 gray JPEG (approximately 134 bytes base)
 	// Created by encoding a 1x1 gray pixel with standard JPEG structure
 	minimalJPEG := []byte{
@@ -360,7 +360,7 @@ func createTestJPEG(size int) []byte {
 		0xFF, 0xE0, 0x00, 0x10, // APP0 marker + length
 		0x4A, 0x46, 0x49, 0x46, 0x00, // "JFIF\0"
 		0x01, 0x01, // version 1.1
-		0x00, // aspect ratio units (0 = no units)
+		0x00,       // aspect ratio units (0 = no units)
 		0x00, 0x01, // X density
 		0x00, 0x01, // Y density
 		0x00, 0x00, // thumbnail size (0x0)
@@ -375,10 +375,10 @@ func createTestJPEG(size int) []byte {
 		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
 		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
 		0xFF, 0xC0, 0x00, 0x0B, // SOF0 marker + length
-		0x08, // 8 bits per component
+		0x08,       // 8 bits per component
 		0x00, 0x01, // height = 1
 		0x00, 0x01, // width = 1
-		0x01, // 1 component (grayscale)
+		0x01,             // 1 component (grayscale)
 		0x01, 0x11, 0x00, // component 1: ID=1, sampling=1x1, quant table 0
 		0xFF, 0xC4, 0x00, 0x1F, // DHT marker + length
 		0x00, // DC table 0
@@ -414,10 +414,10 @@ func createTestJPEG(size int) []byte {
 		0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8,
 		0xF9, 0xFA,
 		0xFF, 0xDA, 0x00, 0x08, // SOS marker + length
-		0x01, // 1 component
+		0x01,       // 1 component
 		0x01, 0x00, // component 1, DC table 0, AC table 0
 		0x00, 0x3F, 0x00, // spectral selection
-		0x7F, // Single gray pixel data (encoded)
+		0x7F,       // Single gray pixel data (encoded)
 		0xFF, 0xD9, // EOI
 	}
 

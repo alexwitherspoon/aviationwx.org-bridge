@@ -341,9 +341,9 @@ func (b *Bridge) getStatus() interface{} {
 
 		// Upload stats
 		result["upload_stats"] = map[string]interface{}{
-			"total":        status.UploadStats.UploadsTotal,
-			"success":      status.UploadStats.UploadsSuccess,
-			"failed":       status.UploadStats.UploadsFailed,
+			"total":         status.UploadStats.UploadsTotal,
+			"success":       status.UploadStats.UploadsSuccess,
+			"failed":        status.UploadStats.UploadsFailed,
 			"auth_failures": status.UploadStats.AuthFailures,
 		}
 	} else {

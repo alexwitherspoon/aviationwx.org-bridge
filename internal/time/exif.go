@@ -14,10 +14,10 @@ const BridgeEXIFMarker = "AviationWX-Bridge"
 
 // EXIFStampResult contains the result of EXIF stamping
 type EXIFStampResult struct {
-	Data           []byte      // Image data (possibly with EXIF added)
-	Stamped        bool        // Whether EXIF was successfully stamped
-	Marker         string      // The marker string that was added
-	ObservationUTC time.Time   // The observation time that was stamped
+	Data           []byte    // Image data (possibly with EXIF added)
+	Stamped        bool      // Whether EXIF was successfully stamped
+	Marker         string    // The marker string that was added
+	ObservationUTC time.Time // The observation time that was stamped
 }
 
 // StampEXIF adds EXIF timestamp to image data if time is healthy.
@@ -210,8 +210,8 @@ func buildSimpleEXIF(dateTime string) []byte {
 	buf.WriteString("Exif\x00\x00")
 
 	// TIFF header (little endian)
-	buf.Write([]byte{0x49, 0x49}) // Little endian marker "II"
-	buf.Write([]byte{0x2A, 0x00}) // TIFF magic number
+	buf.Write([]byte{0x49, 0x49})             // Little endian marker "II"
+	buf.Write([]byte{0x2A, 0x00})             // TIFF magic number
 	buf.Write([]byte{0x08, 0x00, 0x00, 0x00}) // Offset to IFD0 (8 bytes from start of TIFF header)
 
 	// IFD0 - we'll put 1 entry pointing to EXIF SubIFD
@@ -222,7 +222,7 @@ func buildSimpleEXIF(dateTime string) []byte {
 
 	// IFD0 entry: ExifOffset tag (0x8769)
 	// Tag ID, Type (LONG=4), Count, Value/Offset
-	exifSubIFDOffset := uint32(8 + 2 + 12 + 4) // IFD0 header + 1 entry + next IFD offset
+	exifSubIFDOffset := uint32(8 + 2 + 12 + 4)              // IFD0 header + 1 entry + next IFD offset
 	binary.Write(&buf, binary.LittleEndian, uint16(0x8769)) // ExifOffset tag
 	binary.Write(&buf, binary.LittleEndian, uint16(4))      // LONG type
 	binary.Write(&buf, binary.LittleEndian, uint32(1))      // Count
@@ -319,9 +319,9 @@ func buildBridgeEXIF(dateTime, marker string, observationUTC time.Time) []byte {
 
 	// Values
 	buf.WriteString(dateTime)
-	buf.WriteByte(0)                // Null terminator
-	buf.WriteString("+00:00")       // UTC offset
-	buf.WriteByte(0)                // Null terminator
+	buf.WriteByte(0)          // Null terminator
+	buf.WriteString("+00:00") // UTC offset
+	buf.WriteByte(0)          // Null terminator
 	buf.Write(userCommentData)
 
 	return buf.Bytes()
@@ -416,7 +416,7 @@ func findEXIFSegment(imageData []byte) []byte {
 func findEXIFTag(exifData []byte, tagID uint16) string {
 	// This is a simplified implementation
 	// A full implementation would properly parse TIFF/EXIF structure
-	
+
 	if len(exifData) < 8 {
 		return ""
 	}

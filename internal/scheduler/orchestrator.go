@@ -37,9 +37,9 @@ type Orchestrator struct {
 // OrchestratorConfig configures the orchestrator
 type OrchestratorConfig struct {
 	// Queue settings
-	QueueBasePath      string // Default: /dev/shm/aviationwx
-	QueueMaxTotalMB    int    // Default: 100
-	QueueMaxHeapMB     int    // Default: 400
+	QueueBasePath   string // Default: /dev/shm/aviationwx
+	QueueMaxTotalMB int    // Default: 100
+	QueueMaxHeapMB  int    // Default: 400
 
 	// Time settings
 	Timezone string // IANA timezone, e.g., "America/Los_Angeles"
@@ -285,12 +285,12 @@ func (o *Orchestrator) GetStatus() OrchestratorStatus {
 		state := worker.GetState()
 
 		cameraStats = append(cameraStats, CameraStatus{
-			CameraID:        cameraID,
-			CaptureStats:    captureStats,
-			QueueStats:      queueStats,
-			LastSuccess:     state.LastSuccess,
-			LastError:       state.LastError,
-			IsBackingOff:    state.IsBackingOff,
+			CameraID:     cameraID,
+			CaptureStats: captureStats,
+			QueueStats:   queueStats,
+			LastSuccess:  state.LastSuccess,
+			LastError:    state.LastError,
+			IsBackingOff: state.IsBackingOff,
 		})
 	}
 
@@ -340,7 +340,3 @@ type CameraStatus struct {
 	LastError    error
 	IsBackingOff bool
 }
-
-
-
-

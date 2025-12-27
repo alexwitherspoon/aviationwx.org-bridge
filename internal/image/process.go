@@ -152,7 +152,7 @@ func EstimateSize(width, height, quality int) int {
 	// Rough estimation: JPEG typically compresses to ~0.5-2 bytes per pixel
 	// at quality 85, less at lower quality
 	pixels := width * height
-	bitsPerPixel := 0.5 + (float64(quality) / 100.0) * 1.5
+	bitsPerPixel := 0.5 + (float64(quality)/100.0)*1.5
 	return int(float64(pixels) * bitsPerPixel)
 }
 
@@ -188,4 +188,3 @@ func PresetHigh() *config.ImageProcessing {
 func PresetOriginal() *config.ImageProcessing {
 	return nil
 }
-

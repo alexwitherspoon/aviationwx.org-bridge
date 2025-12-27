@@ -7,9 +7,9 @@ import (
 
 // TimeHealth manages time health status and SNTP checks
 type TimeHealth struct {
-	healthy      bool
-	offset       time.Duration // Time offset from NTP server
-	lastCheck    time.Time
+	healthy       bool
+	offset        time.Duration // Time offset from NTP server
+	lastCheck     time.Time
 	checkInterval time.Duration
 	maxOffset     time.Duration
 	servers       []string
@@ -38,17 +38,17 @@ func NewTimeHealth(config Config) *TimeHealth {
 	if checkInterval == 0 {
 		checkInterval = 300 * time.Second // Default 5 minutes
 	}
-	
+
 	maxOffset := time.Duration(config.MaxOffsetSeconds) * time.Second
 	if maxOffset == 0 {
 		maxOffset = 5 * time.Second // Default 5 seconds
 	}
-	
+
 	servers := config.Servers
 	if len(servers) == 0 {
 		servers = []string{"pool.ntp.org"} // Default NTP server
 	}
-	
+
 	return &TimeHealth{
 		healthy:       false, // Start as unhealthy until first check
 		offset:        0,
@@ -88,7 +88,7 @@ func (th *TimeHealth) GetStatus() Status {
 func (th *TimeHealth) Start() {
 	// Perform initial check
 	th.check()
-	
+
 	// Start periodic checks
 	go th.run()
 }
@@ -97,7 +97,7 @@ func (th *TimeHealth) Start() {
 func (th *TimeHealth) run() {
 	ticker := time.NewTicker(th.checkInterval)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		th.check()
 	}
@@ -111,17 +111,17 @@ func (th *TimeHealth) check() {
 		if err != nil {
 			continue // Try next server
 		}
-		
+
 		// Update state
 		th.mu.Lock()
 		th.offset = offset
 		th.lastCheck = time.Now()
 		th.healthy = absDuration(offset) <= th.maxOffset
 		th.mu.Unlock()
-		
+
 		return // Success
 	}
-	
+
 	// All servers failed - mark as unhealthy
 	th.mu.Lock()
 	th.healthy = false
@@ -138,4 +138,3 @@ func absDuration(d time.Duration) time.Duration {
 	}
 	return d
 }
-

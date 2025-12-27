@@ -21,10 +21,3 @@ func NewClientFromConfig(cfg config.Upload) (Client, error) {
 
 	return NewFTPSClient(uploadConfig)
 }
-
-
-
-
-
-
-
