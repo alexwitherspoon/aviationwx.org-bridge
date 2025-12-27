@@ -184,7 +184,7 @@ func (w *CaptureWorker) capture() {
 		tmpFile, err := os.CreateTemp("", "aviationwx-capture-*.jpg")
 		if err == nil {
 			tmpPath := tmpFile.Name()
-			tmpFile.Write(imageData)
+			_, _ = tmpFile.Write(imageData)
 			tmpFile.Close()
 			defer os.Remove(tmpPath)
 
