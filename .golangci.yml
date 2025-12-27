@@ -40,4 +40,8 @@ issues:
     - path: _test\.go
       linters:
         - unused
+    # Exclude SA9003 (empty branch) - sometimes intentional for clarity
+    - linters:
+        - staticcheck
+      text: "SA9003"
 
