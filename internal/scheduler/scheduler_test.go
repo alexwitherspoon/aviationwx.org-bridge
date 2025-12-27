@@ -52,7 +52,7 @@ func TestNewScheduler(t *testing.T) {
 	}
 	uploader := &mockUploader{}
 	timeHealth := &timehealth.TimeHealth{} // Mock time health (will need proper initialization in real usage)
-	
+
 	s := NewScheduler(cameras, configs, uploader, timeHealth, Config{})
 
 	if s == nil {

@@ -112,10 +112,3 @@ func validateCamera(cam *Camera, index int) error {
 
 	return nil
 }
-
-
-
-
-
-
-

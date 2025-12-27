@@ -13,17 +13,17 @@ import (
 
 // CaptureWorker handles image capture for a single camera
 type CaptureWorker struct {
-	camera      camera.Camera
-	config      CameraConfig
-	queue       *queue.Queue
-	authority   *timepkg.Authority
-	exifHelper  *timepkg.ExifToolHelper
-	state       *CameraState
-	interval    time.Duration
-	ctx         context.Context
-	cancel      context.CancelFunc
-	mu          sync.RWMutex
-	logger      Logger
+	camera     camera.Camera
+	config     CameraConfig
+	queue      *queue.Queue
+	authority  *timepkg.Authority
+	exifHelper *timepkg.ExifToolHelper
+	state      *CameraState
+	interval   time.Duration
+	ctx        context.Context
+	cancel     context.CancelFunc
+	mu         sync.RWMutex
+	logger     Logger
 
 	// Statistics
 	capturesTotal   int64
@@ -34,13 +34,13 @@ type CaptureWorker struct {
 
 // CaptureWorkerConfig configures a capture worker
 type CaptureWorkerConfig struct {
-	Camera        camera.Camera
-	CameraConfig  CameraConfig
-	Queue         *queue.Queue
-	Authority     *timepkg.Authority
-	ExifHelper    *timepkg.ExifToolHelper
-	IntervalSecs  int // Capture interval in seconds (1-1800, default 60)
-	Logger        Logger
+	Camera       camera.Camera
+	CameraConfig CameraConfig
+	Queue        *queue.Queue
+	Authority    *timepkg.Authority
+	ExifHelper   *timepkg.ExifToolHelper
+	IntervalSecs int // Capture interval in seconds (1-1800, default 60)
+	Logger       Logger
 }
 
 // NewCaptureWorker creates a new capture worker for a camera
@@ -305,7 +305,3 @@ func (d *defaultLogger) Debug(msg string, keysAndValues ...interface{}) {}
 func (d *defaultLogger) Info(msg string, keysAndValues ...interface{})  {}
 func (d *defaultLogger) Warn(msg string, keysAndValues ...interface{})  {}
 func (d *defaultLogger) Error(msg string, keysAndValues ...interface{}) {}
-
-
-
-

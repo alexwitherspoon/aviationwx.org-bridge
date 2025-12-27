@@ -98,10 +98,3 @@ func applyDefaults(c *Config) {
 		c.WebConsole.Port = 8080
 	}
 }
-
-
-
-
-
-
-

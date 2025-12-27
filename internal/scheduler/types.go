@@ -64,7 +64,7 @@ type Status struct {
 // NewScheduler creates a new scheduler instance
 func NewScheduler(cameras []camera.Camera, cameraConfigs map[string]CameraConfig, uploader upload.Client, timeHealth *timehealth.TimeHealth, config Config) *Scheduler {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Apply defaults
 	if config.IntervalSeconds == 0 {
 		config.IntervalSeconds = 60 // Default 60 seconds
@@ -72,7 +72,7 @@ func NewScheduler(cameras []camera.Camera, cameraConfigs map[string]CameraConfig
 	if config.GlobalTimeout == 0 {
 		config.GlobalTimeout = 120 // Default 2 minutes
 	}
-	
+
 	return &Scheduler{
 		cameras:       cameras,
 		cameraConfigs: cameraConfigs,

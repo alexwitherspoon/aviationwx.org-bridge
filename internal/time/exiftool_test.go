@@ -57,7 +57,7 @@ func TestExifToolHelper_ReadEXIF_NoFile(t *testing.T) {
 
 	// Note: exiftool may return an empty result rather than an error for nonexistent files
 	result, err := helper.ReadEXIF("/nonexistent/path/to/image.jpg")
-	
+
 	// Either an error or an empty/unsuccessful result is acceptable
 	if err == nil && result != nil && result.Success {
 		// If it claims success, check that there's no meaningful data
@@ -520,4 +520,3 @@ func BenchmarkStampBridgeEXIFWithTool(b *testing.B) {
 		StampBridgeEXIFWithTool(jpegData, observation)
 	}
 }
-

@@ -88,20 +88,20 @@ func TestScheduler_FailureRecovery(t *testing.T) {
 	configs := map[string]CameraConfig{
 		"cam1": {ID: "cam1", RemotePath: "test/cam1", Enabled: true},
 	}
-	
+
 	uploader := &mockUploader{}
 	s := NewScheduler(cameras, configs, uploader, nil, Config{IntervalSeconds: 1})
 	s.Start()
-	
+
 	// Wait for failures to be recorded
 	time.Sleep(2500 * time.Millisecond)
-	
+
 	status := s.GetStatus()
 	if len(status.CameraStates) == 0 {
 		t.Fatal("No camera states found")
 	}
 	state := status.CameraStates[0]
-	
+
 	// Verify failures are recorded
 	if state.FailureCount == 0 {
 		t.Error("FailureCount should be > 0 after failures")
@@ -112,14 +112,14 @@ func TestScheduler_FailureRecovery(t *testing.T) {
 	if state.LastError == nil {
 		t.Error("LastError should be set after failures")
 	}
-	
+
 	// Now make camera succeed
 	cameras[0] = &mockCamera{id: "cam1", camType: "http", data: []byte("success"), err: nil}
-	
+
 	// Wait for backoff to expire and retry (backoff is 60s, so we'll just verify the state)
 	// In a real scenario, the camera would eventually succeed and reset backoff
 	// This test verifies that failures are properly tracked
-	
+
 	s.Stop()
 }
 

@@ -24,9 +24,9 @@ const (
 
 // ObservationResult contains the determined observation time and metadata
 type ObservationResult struct {
-	Time       time.Time   // Observation time in UTC
-	Source     TimeSource  // Where the time came from
-	Confidence Confidence  // How confident we are
+	Time       time.Time    // Observation time in UTC
+	Source     TimeSource   // Where the time came from
+	Confidence Confidence   // How confident we are
 	Warning    *TimeWarning // Optional warning about time issues
 }
 
@@ -43,26 +43,26 @@ type AuthorityConfig struct {
 	Timezone string `json:"timezone"`
 
 	// Thresholds for camera clock validation
-	CameraToleranceSeconds    int `json:"camera_tolerance_seconds"`     // Default: 5
-	CameraWarnDriftSeconds    int `json:"camera_warn_drift_seconds"`    // Default: 30
-	CameraRejectDriftSeconds  int `json:"camera_reject_drift_seconds"`  // Default: 300 (5 min)
+	CameraToleranceSeconds   int `json:"camera_tolerance_seconds"`    // Default: 5
+	CameraWarnDriftSeconds   int `json:"camera_warn_drift_seconds"`   // Default: 30
+	CameraRejectDriftSeconds int `json:"camera_reject_drift_seconds"` // Default: 300 (5 min)
 }
 
 // DefaultAuthorityConfig returns sensible defaults
 func DefaultAuthorityConfig() AuthorityConfig {
 	return AuthorityConfig{
-		Timezone:                  "",  // Use system timezone
-		CameraToleranceSeconds:    5,
-		CameraWarnDriftSeconds:    30,
-		CameraRejectDriftSeconds:  300,
+		Timezone:                 "", // Use system timezone
+		CameraToleranceSeconds:   5,
+		CameraWarnDriftSeconds:   30,
+		CameraRejectDriftSeconds: 300,
 	}
 }
 
 // Authority determines observation times based on camera EXIF and bridge clock
 type Authority struct {
-	ntpHealth    *TimeHealth
-	localTZ      *time.Location
-	config       AuthorityConfig
+	ntpHealth *TimeHealth
+	localTZ   *time.Location
+	config    AuthorityConfig
 }
 
 // NewAuthority creates a new time authority
@@ -274,24 +274,24 @@ type TimeInfo struct {
 func (a *Authority) GetTimeInfo() TimeInfo {
 	now := time.Now()
 	local := now.In(a.localTZ)
-	
+
 	// Get timezone abbreviation and offset
 	abbrev, offset := local.Zone()
 	offsetHours := offset / 3600
 	offsetMins := (offset % 3600) / 60
 	offsetStr := fmt.Sprintf("%+03d:%02d", offsetHours, absInt(offsetMins))
-	
+
 	// Check if DST is active (compare with standard time)
 	_, standardOffset := time.Date(local.Year(), time.January, 1, 0, 0, 0, 0, a.localTZ).Zone()
 	dstActive := offset != standardOffset
-	
+
 	var ntpOffsetMs int64
 	timeHealthy := true
 	if a.ntpHealth != nil {
 		timeHealthy = a.ntpHealth.IsHealthy()
 		ntpOffsetMs = a.ntpHealth.GetOffset().Milliseconds()
 	}
-	
+
 	return TimeInfo{
 		UTC:            now.UTC().Format(time.RFC3339),
 		Local:          local.Format(time.RFC3339),
@@ -310,4 +310,3 @@ func absInt(n int) int {
 	}
 	return n
 }
-

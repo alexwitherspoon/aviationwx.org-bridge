@@ -1,6 +1,6 @@
 # Multi-stage build for AviationWX Bridge
 # Stage 1: Build Go binary
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git make

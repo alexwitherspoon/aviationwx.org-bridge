@@ -66,7 +66,7 @@ func TestManager_GetQueue(t *testing.T) {
 	manager, _ := NewManager(config, nil)
 	queueConfig := DefaultQueueConfig()
 
-	manager.CreateQueue("camera-1", queueConfig)
+	_, _ = manager.CreateQueue("camera-1", queueConfig)
 
 	// Get existing queue
 	q, ok := manager.GetQueue("camera-1")
@@ -92,7 +92,7 @@ func TestManager_RemoveQueue(t *testing.T) {
 	manager, _ := NewManager(config, nil)
 	queueConfig := DefaultQueueConfig()
 
-	manager.CreateQueue("camera-1", queueConfig)
+	_, _ = manager.CreateQueue("camera-1", queueConfig)
 
 	// Remove existing queue
 	err := manager.RemoveQueue("camera-1")
@@ -121,9 +121,9 @@ func TestManager_GetAllQueues(t *testing.T) {
 	manager, _ := NewManager(config, nil)
 	queueConfig := DefaultQueueConfig()
 
-	manager.CreateQueue("camera-1", queueConfig)
-	manager.CreateQueue("camera-2", queueConfig)
-	manager.CreateQueue("camera-3", queueConfig)
+	_, _ = manager.CreateQueue("camera-1", queueConfig)
+	_, _ = manager.CreateQueue("camera-2", queueConfig)
+	_, _ = manager.CreateQueue("camera-3", queueConfig)
 
 	queues := manager.GetAllQueues()
 	if len(queues) != 3 {
@@ -144,9 +144,9 @@ func TestManager_GetGlobalStats(t *testing.T) {
 
 	// Add some images
 	imageData := createTestJPEG(1024)
-	q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
-	q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
-	q2.Enqueue(imageData, time.Now().UTC().Add(2*time.Millisecond), "bridge_clock", "high")
+	_ = q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
+	_ = q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
+	_ = q2.Enqueue(imageData, time.Now().UTC().Add(2*time.Millisecond), "bridge_clock", "high")
 
 	stats := manager.GetGlobalStats()
 
@@ -165,7 +165,7 @@ func TestManager_ExpireAllOldImages(t *testing.T) {
 	config.BasePath = dir
 
 	manager, _ := NewManager(config, nil)
-	
+
 	queueConfig := DefaultQueueConfig()
 	queueConfig.MaxAgeSeconds = 2 // 2 seconds for testing
 
@@ -174,8 +174,8 @@ func TestManager_ExpireAllOldImages(t *testing.T) {
 
 	// Add images now
 	imageData := createTestJPEG(1024)
-	q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
-	q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
+	_ = q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
+	_ = q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
 
 	// Verify images were added
 	if q1.GetImageCount() != 1 || q2.GetImageCount() != 1 {
@@ -204,8 +204,8 @@ func TestManager_GetTotalQueueSize(t *testing.T) {
 
 	// Add some images
 	imageData := createTestJPEG(1024)
-	q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
-	q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
+	_ = q1.Enqueue(imageData, time.Now().UTC(), "bridge_clock", "high")
+	_ = q2.Enqueue(imageData, time.Now().UTC().Add(time.Millisecond), "bridge_clock", "high")
 
 	totalSize := manager.GetTotalQueueSize()
 	expectedSize := int64(2 * len(imageData)) // 2 images
@@ -229,10 +229,10 @@ func TestManager_GetTotalImageCount(t *testing.T) {
 	// Add some images
 	imageData := createTestJPEG(1024)
 	for i := 0; i < 3; i++ {
-		q1.Enqueue(imageData, time.Now().UTC().Add(time.Duration(i)*time.Millisecond), "bridge_clock", "high")
+		_ = q1.Enqueue(imageData, time.Now().UTC().Add(time.Duration(i)*time.Millisecond), "bridge_clock", "high")
 	}
 	for i := 0; i < 2; i++ {
-		q2.Enqueue(imageData, time.Now().UTC().Add(time.Duration(i+10)*time.Millisecond), "bridge_clock", "high")
+		_ = q2.Enqueue(imageData, time.Now().UTC().Add(time.Duration(i+10)*time.Millisecond), "bridge_clock", "high")
 	}
 
 	total := manager.GetTotalImageCount()
@@ -265,7 +265,7 @@ func TestManager_MemoryMonitor(t *testing.T) {
 
 	// Add lots of data to trigger memory pressure
 	imageData := createTestJPEG(100 * 1024) // 100KB per image
-	for i := 0; i < 20; i++ { // 2MB total, exceeds 1MB limit
+	for i := 0; i < 20; i++ {               // 2MB total, exceeds 1MB limit
 		ts := time.Now().UTC().Add(time.Duration(i) * time.Millisecond)
 		_ = q.Enqueue(imageData, ts, "bridge_clock", "high")
 	}
@@ -293,7 +293,7 @@ func TestManager_ExpirationWorker(t *testing.T) {
 	// Add an image
 	imageData := createTestJPEG(1024)
 	oldTime := time.Now().UTC().Add(-5 * time.Second)
-	q.Enqueue(imageData, oldTime, "bridge_clock", "high")
+	_ = q.Enqueue(imageData, oldTime, "bridge_clock", "high")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -309,4 +309,3 @@ func TestManager_ExpirationWorker(t *testing.T) {
 		t.Errorf("expected 0 images after expiration, got %d", q.GetImageCount())
 	}
 }
-

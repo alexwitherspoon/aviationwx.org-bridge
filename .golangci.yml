@@ -1,0 +1,43 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - unused
+    - govet
+    - gosimple
+    - ineffassign
+
+linters-settings:
+  errcheck:
+    # Don't check for errors for these patterns (common safe-to-ignore cases)
+    exclude-functions:
+      # bytes.Buffer writes never fail
+      - (bytes.Buffer).Write
+      - (bytes.Buffer).WriteByte
+      - (bytes.Buffer).WriteString
+      - encoding/binary.Write
+      # HTTP response writes - nothing to do if client disconnected
+      - (net/http.ResponseWriter).Write
+      - (*encoding/json.Encoder).Encode
+      # Logging and testing
+      - (io.Writer).Write
+      - (*testing.T).Log
+      - (*testing.T).Logf
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
+
+issues:
+  exclude-rules:
+    # Exclude errcheck in test files - test code often ignores errors intentionally
+    - path: _test\.go
+      linters:
+        - errcheck
+    # Allow unused code in test files (test helpers, mocks)
+    - path: _test\.go
+      linters:
+        - unused
+

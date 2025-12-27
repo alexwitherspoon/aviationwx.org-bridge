@@ -396,4 +396,3 @@ func GetExifToolPath() (string, error) {
 
 	return "", fmt.Errorf("exiftool not found")
 }
-

@@ -627,9 +627,3 @@ func parseTimestampFromFilename(filename string) time.Time {
 	}
 	return time.UnixMilli(ms).UTC()
 }
-
-
-
-
-
-

@@ -3,12 +3,12 @@ package config
 // Config represents the root configuration structure
 // Version 2 uses per-camera upload credentials
 type Config struct {
-	Version    int          `json:"version"`              // Config version, current: 2
-	Timezone   string       `json:"timezone,omitempty"`   // IANA timezone, e.g., "America/Los_Angeles"
-	Cameras    []Camera     `json:"cameras"`              // Camera configurations
-	Global     *Global      `json:"global,omitempty"`     // Global settings
-	Queue      *QueueGlobal `json:"queue,omitempty"`      // Queue settings
-	SNTP       *SNTP        `json:"sntp,omitempty"`       // NTP time health settings
+	Version    int          `json:"version"`               // Config version, current: 2
+	Timezone   string       `json:"timezone,omitempty"`    // IANA timezone, e.g., "America/Los_Angeles"
+	Cameras    []Camera     `json:"cameras"`               // Camera configurations
+	Global     *Global      `json:"global,omitempty"`      // Global settings
+	Queue      *QueueGlobal `json:"queue,omitempty"`       // Queue settings
+	SNTP       *SNTP        `json:"sntp,omitempty"`        // NTP time health settings
 	WebConsole *WebConsole  `json:"web_console,omitempty"` // Web console settings
 
 	// Deprecated: Use per-camera Upload instead
@@ -64,12 +64,12 @@ type ImageProcessing struct {
 
 // Upload represents FTPS upload settings
 type Upload struct {
-	Host     string `json:"host"`               // Default: upload.aviationwx.org
-	Port     int    `json:"port,omitempty"`     // Default: 21
-	Username string `json:"username"`           // FTP username (provided by aviationwx.org)
-	Password string `json:"password"`           // FTP password (provided by aviationwx.org)
-	TLS      bool   `json:"tls,omitempty"`      // Default: true
-	TLSVerify bool  `json:"tls_verify,omitempty"` // Default: true
+	Host      string `json:"host"`                 // Default: upload.aviationwx.org
+	Port      int    `json:"port,omitempty"`       // Default: 21
+	Username  string `json:"username"`             // FTP username (provided by aviationwx.org)
+	Password  string `json:"password"`             // FTP password (provided by aviationwx.org)
+	TLS       bool   `json:"tls,omitempty"`        // Default: true
+	TLSVerify bool   `json:"tls_verify,omitempty"` // Default: true
 
 	// Advanced settings (rarely needed)
 	CABundlePath          string `json:"ca_bundle_path,omitempty"`
@@ -124,7 +124,7 @@ func (i *ImageProcessing) NeedsProcessing() bool {
 
 // Auth represents HTTP authentication for camera access
 type Auth struct {
-	Type     string `json:"type"`               // "basic", "digest", "bearer"
+	Type     string `json:"type"` // "basic", "digest", "bearer"
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 	Token    string `json:"token,omitempty"` // For bearer auth
@@ -233,8 +233,8 @@ type QueueCamera struct {
 
 // TimeAuthority represents time authority settings
 type TimeAuthority struct {
-	CameraToleranceSeconds   int `json:"camera_tolerance_seconds,omitempty"`   // Default: 5
-	CameraWarnDriftSeconds   int `json:"camera_warn_drift_seconds,omitempty"`  // Default: 30
+	CameraToleranceSeconds   int `json:"camera_tolerance_seconds,omitempty"`    // Default: 5
+	CameraWarnDriftSeconds   int `json:"camera_warn_drift_seconds,omitempty"`   // Default: 30
 	CameraRejectDriftSeconds int `json:"camera_reject_drift_seconds,omitempty"` // Default: 300
 }
 
