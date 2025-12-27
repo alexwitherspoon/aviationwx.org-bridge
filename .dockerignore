@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation (planning docs excluded)
+docs/PLANNING.md
+docs/LIBRARY_ANALYSIS.md
+docs/DIRECTORY_STRUCTURE.md
+docs/CLEANUP_NOTES.md
+
+# Development files
+*.md
+!README.md
+!LICENSE
+
+# Tests
+tests/
+*.test
+*.out
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Config (use example)
+config.json
+configs/config.json
+!configs/config.json.example
+
+# Logs
+*.log
+logs/
+
+# Temporary
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+
+
+
+
+
+
+

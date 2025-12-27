@@ -1,0 +1,64 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: go.sum
+      
+      - name: Download dependencies
+        run: go mod download
+      
+      - name: Run go vet
+        run: go vet ./...
+      
+      - name: Run gofmt check
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "❌ Code is not formatted. Run 'gofmt -s -w .'"
+            gofmt -s -d .
+            exit 1
+          fi
+          echo "✓ Code is properly formatted"
+      
+      - name: Check for sensitive data
+        run: |
+          # Check for potential secrets in code
+          if grep -r "password.*=.*['\"].*[a-zA-Z0-9]{8,}" --include="*.go" . | grep -v "example\|test\|TODO"; then
+            echo "⚠️  Potential hardcoded password found"
+            exit 1
+          fi
+          echo "✓ No obvious hardcoded secrets found"
+      
+      - name: Validate config example
+        run: |
+          if [ -f "configs/config.json.example" ]; then
+            python3 -m json.tool configs/config.json.example > /dev/null
+            echo "✓ config.json.example is valid JSON"
+          fi
+
+
+
+
+
+
+
+
