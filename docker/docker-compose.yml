@@ -1,0 +1,28 @@
+# AviationWX Bridge - Docker Compose Configuration
+# https://github.com/alexwitherspoon/aviationwx-bridge
+
+services:
+  bridge:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - GIT_COMMIT=${GIT_COMMIT:-dev}
+    container_name: aviationwx-bridge
+    restart: unless-stopped
+    ports:
+      - "1229:1229"  # Web console
+    volumes:
+      - ./data:/data  # Persistent config and data
+    tmpfs:
+      - /dev/shm:size=100m  # RAM-based image queue
+    environment:
+      - AVIATIONWX_CONFIG=/data/config.json
+      - AVIATIONWX_QUEUE_PATH=/dev/shm/aviationwx
+      # exiftool is used for EXIF reading/writing (included in Docker image)
+    # Uncomment for production hardening:
+    # security_opt:
+    #   - no-new-privileges:true
+    # cap_drop:
+    #   - ALL
+    # read_only: true

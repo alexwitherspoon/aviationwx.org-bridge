@@ -1,0 +1,117 @@
+# Sensitive configuration files (DO NOT COMMIT)
+config.json
+configs/config.json
+*.secrets.env
+secrets.env
+
+# Keep example configs
+!configs/config.json.example
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Go dependencies
+vendor/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+*.bak
+*.backup
+*~
+
+# Test artifacts
+coverage/
+*.coverage.xml
+coverage.xml
+*-results.xml
+
+# Docker
+docker-compose.override.yml
+
+# Environment variables (local overrides only)
+.env.local
+.env.*.local
+
+# AI-specific configuration files (keep local only, never commit)
+.cursorrules
+.cursor/
+*.cursorrules
+.cursorrc
+.cursor-settings.json
+
+# AI-generated temporary files (if any)
+*.ai-temp
+*.ai-backup
+*_ai_*.tmp
+
+# Diagnostic and temporary documentation files (never commit)
+# These are planning/analysis docs for development, not public documentation
+docs/*DIAGNOSTICS*.md
+docs/*TROUBLESHOOTING*.md
+docs/*TEST*.md
+docs/*TEMP*.md
+docs/*ANALYSIS*.md
+docs/*CHECKLIST*.md
+docs/*PLAN*.md
+docs/*PLANNING*.md
+docs/*QUESTIONS*.md
+docs/*RESULTS*.md
+docs/*FINDINGS*.md
+docs/*DESIGN*.md
+docs/*EXECUTION*.md
+docs/*FIXES*.md
+docs/*SUMMARY*.md
+docs/*REVIEW*.md
+
+# Keep public documentation (README, LOCAL_SETUP, DEPLOYMENT, API, etc.)
+!docs/README.md
+!docs/LOCAL_SETUP.md
+!docs/DEPLOYMENT.md
+!docs/API.md
+!docs/CONFIG_SCHEMA.md
+
+
+
+
+
+
+
+

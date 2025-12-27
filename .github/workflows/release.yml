@@ -1,0 +1,228 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+      critical:
+        description: 'Is this a critical security update?'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build Go binaries for multiple architectures
+  build-binaries:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: linux
+            goarch: arm
+            goarm: "7"
+            suffix: linux-armv7
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "VERSION_NUM=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          go build -ldflags="-w -s -X main.Version=${{ steps.version.outputs.VERSION_NUM }} -X main.GitCommit=${GIT_COMMIT}" \
+            -o dist/aviationwx-bridge-${{ matrix.suffix }} \
+            ./cmd/bridge
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aviationwx-bridge-${{ matrix.suffix }}
+          path: dist/aviationwx-bridge-${{ matrix.suffix }}
+
+  # Build and push Docker images
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "VERSION_NUM=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "GIT_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.VERSION_NUM }}
+            GIT_COMMIT=${{ steps.version.outputs.GIT_COMMIT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Create GitHub Release
+  release:
+    runs-on: ubuntu-latest
+    needs: [build-binaries, build-docker]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            CRITICAL="${{ github.event.inputs.critical }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+            CRITICAL="false"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "VERSION_NUM=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "CRITICAL=${CRITICAL}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Prepare release assets
+        run: |
+          cd dist
+          # Flatten directory structure
+          find . -type f -name 'aviationwx-bridge-*' -exec mv {} . \;
+          # Make binaries executable and create checksums
+          chmod +x aviationwx-bridge-* 2>/dev/null || true
+          sha256sum aviationwx-bridge-* > checksums.txt
+          # Remove empty directories
+          find . -type d -empty -delete
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: AviationWX Bridge ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## AviationWX Bridge ${{ steps.version.outputs.VERSION }}
+            
+            <!-- AVIATIONWX_RELEASE_META {"version": "${{ steps.version.outputs.VERSION_NUM }}", "critical": ${{ steps.version.outputs.CRITICAL }}, "force_update": false, "rollback_safe": true} -->
+            
+            ### Installation
+            
+            #### Raspberry Pi (Recommended)
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
+            ```
+            
+            #### Docker
+            ```bash
+            docker pull ghcr.io/alexwitherspoon/aviationwx-bridge:${{ steps.version.outputs.VERSION_NUM }}
+            ```
+            
+            ### Docker Images
+            
+            Available at `ghcr.io/alexwitherspoon/aviationwx-bridge`:
+            - `:${{ steps.version.outputs.VERSION_NUM }}` - This specific version
+            - `:latest` - Latest stable release
+            
+            **Supported platforms:** `linux/amd64`, `linux/arm64`, `linux/arm/v7`
+            
+            ### Binaries
+            
+            Download standalone binaries for your platform from the assets below.
+            
+            | Platform | Binary |
+            |----------|--------|
+            | Linux (x86_64) | `aviationwx-bridge-linux-amd64` |
+            | Linux (ARM64/Pi 4) | `aviationwx-bridge-linux-arm64` |
+            | Linux (ARMv7/Pi 3) | `aviationwx-bridge-linux-armv7` |
+            | macOS (Intel) | `aviationwx-bridge-darwin-amd64` |
+            | macOS (Apple Silicon) | `aviationwx-bridge-darwin-arm64` |
+            
+            ### Changelog
+            
+            See [CHANGELOG.md](https://github.com/alexwitherspoon/aviationwx-bridge/blob/main/CHANGELOG.md) for details.
+          files: |
+            dist/aviationwx-bridge-*
+            dist/checksums.txt
+          draft: false
+          prerelease: false

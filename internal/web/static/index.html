@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AviationWX Bridge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-logo">✈</span>
+                <span class="nav-title">AviationWX Bridge</span>
+                <span class="nav-version" id="appVersion"></span>
+                <a href="#" class="nav-update" id="updateAvailable" style="display:none" target="_blank">
+                    ⬆ Update
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="#dashboard" class="nav-link active" data-section="dashboard">Dashboard</a>
+                <a href="#cameras" class="nav-link" data-section="cameras">Cameras</a>
+                <a href="#settings" class="nav-link" data-section="settings">Settings</a>
+            </div>
+            <div class="nav-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Connecting...</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h1>Dashboard</h1>
+                    <span class="time-display" id="timeDisplay"></span>
+                </div>
+
+                <!-- First Run Setup Banner -->
+                <div id="setupBanner" class="banner banner-info" style="display: none;">
+                    <div class="banner-content">
+                        <h3>Welcome to AviationWX Bridge!</h3>
+                        <p>Let's set up your first camera. You'll need your FTP credentials from aviationwx.org</p>
+                        <button class="btn btn-primary" onclick="showSetupWizard()">Start Setup</button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📷</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="statCameras">0</div>
+                            <div class="stat-label">Cameras</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📤</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="statUploads">0</div>
+                            <div class="stat-label">Uploads Today</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="statQueue">0</div>
+                            <div class="stat-label">In Queue</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🕐</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="statNTP">--</div>
+                            <div class="stat-label">NTP Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Camera Overview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Camera Status</h2>
+                        <button class="btn btn-sm" onclick="refreshStatus()">Refresh</button>
+                    </div>
+                    <div id="cameraOverview" class="camera-overview">
+                        <div class="empty-state">
+                            <p>No cameras configured</p>
+                            <button class="btn btn-primary" onclick="showSection('cameras'); showAddCamera()">Add Camera</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cameras Section -->
+            <section id="cameras" class="section">
+                <div class="section-header">
+                    <h1>Cameras</h1>
+                    <button class="btn btn-primary" onclick="showAddCamera()">+ Add Camera</button>
+                </div>
+
+                <div id="cameraList" class="camera-list">
+                    <div class="empty-state">
+                        <p>No cameras configured yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <div class="section-header">
+                    <h1>Settings</h1>
+                </div>
+
+                <!-- Time Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Time Configuration</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="timezone">Local Timezone</label>
+                            <select id="timezone" class="form-control" onchange="updateTimezone()">
+                                <option value="">-- Select Timezone --</option>
+                            </select>
+                            <p class="form-help">
+                                Select the timezone where your cameras are located. 
+                                Camera timestamps will be interpreted in this timezone and converted to UTC.
+                            </p>
+                        </div>
+
+                        <div class="time-preview">
+                            <div class="time-box">
+                                <label>Local Time</label>
+                                <span id="localTime" class="time-value">--:--:--</span>
+                            </div>
+                            <div class="time-arrow">→</div>
+                            <div class="time-box">
+                                <label>UTC Time</label>
+                                <span id="utcTime" class="time-value">--:--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Web Console Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Web Console</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="webPassword">Password</label>
+                            <input type="password" id="webPassword" class="form-control" placeholder="••••••••">
+                            <p class="form-help">
+                                Change the password for the web console. 
+                                Contact: <a href="mailto:contact@aviationwx.org">contact@aviationwx.org</a> for FTP credentials.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveWebSettings()">Save Password</button>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Advanced</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span>Upload Server</span>
+                            <code>upload.aviationwx.org</code>
+                        </div>
+                        <div class="info-row">
+                            <span>Config Version</span>
+                            <code id="configVersion">--</code>
+                        </div>
+                        <div class="info-row">
+                            <span>Queue Path</span>
+                            <code>/dev/shm/aviationwx</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal Overlay -->
+        <div id="modal" class="modal" style="display: none;">
+            <div class="modal-backdrop" onclick="closeModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Modal</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div id="modalBody" class="modal-body">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
+
+
+
+
