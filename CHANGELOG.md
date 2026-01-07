@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **CI/CD**: Standardized all GitHub Actions workflows to Go 1.24
+  - Updated `test.yml` workflow from Go 1.21 to Go 1.24
+  - Updated `pr-checks.yml` workflow from Go 1.21 to Go 1.24
+  - Eliminates tar cache warnings caused by mixed Go toolchain versions
+  - Improves cache hit rates across workflow runs
+  - Matches production Docker image Go version (1.24)
+
 ### Added
 - **System Resources Dashboard**: Real-time monitoring with color-coded health indicators
   - CPU usage with percentage and health level (green/yellow/red)
