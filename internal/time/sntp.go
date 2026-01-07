@@ -23,3 +23,4 @@ func (th *TimeHealth) queryNTP(server string) (time.Duration, error) {
 	// Return clock offset (difference between local and NTP time)
 	return response.ClockOffset, nil
 }
+

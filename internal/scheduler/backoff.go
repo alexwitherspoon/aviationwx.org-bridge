@@ -71,3 +71,4 @@ func ResetBackoff(state *CameraState) {
 func ShouldAttempt(state *CameraState) bool {
 	return time.Now().After(state.NextAttempt) || state.NextAttempt.IsZero()
 }
+

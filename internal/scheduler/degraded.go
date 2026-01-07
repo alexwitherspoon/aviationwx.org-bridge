@@ -116,3 +116,4 @@ func (dm *DegradedMode) GetFailureCount() int {
 	defer dm.mu.RUnlock()
 	return dm.failureCount
 }
+

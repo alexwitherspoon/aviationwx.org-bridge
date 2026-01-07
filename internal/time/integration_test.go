@@ -76,3 +76,4 @@ func TestStampEXIF_Integration(t *testing.T) {
 		t.Error("Result should not be shorter than input")
 	}
 }
+

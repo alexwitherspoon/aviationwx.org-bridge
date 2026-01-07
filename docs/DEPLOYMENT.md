@@ -77,7 +77,7 @@ docker run -d \
   --restart=unless-stopped \
   -p 1229:1229 \
   -v /opt/aviationwx/data:/data \
-  --tmpfs /dev/shm:size=100m \
+  --tmpfs /dev/shm:size=200m \
   ghcr.io/alexwitherspoon/aviationwx-bridge:latest
 ```
 
@@ -94,7 +94,7 @@ services:
     volumes:
       - ./data:/data
     tmpfs:
-      - /dev/shm:size=100m
+      - /dev/shm:size=200m
     environment:
       - LOG_LEVEL=info
 ```
@@ -259,22 +259,145 @@ cat /data/aviationwx/supervisor.log
 
 ---
 
+## Queue Storage Configuration
+
+The bridge uses a RAM-based filesystem (tmpfs) to store images waiting for upload. This protects SD cards from write wear and provides fast I/O, but the size must be configured appropriately for your setup.
+
+### Why This Matters
+
+Images queue up when:
+- Upload connection is temporarily unavailable
+- Network is slower than capture rate
+- FTP server is briefly unreachable
+
+The queue must be large enough to hold images during these periods without losing data.
+
+### Sizing Recommendations
+
+| Setup | Image Size (typical) | 10-min Backlog | Recommended tmpfs |
+|-------|---------------------|----------------|-------------------|
+| 1-2 cameras @ 1080p | ~1 MB | ~20 images | `100m` |
+| 3-4 cameras @ 1080p | ~1 MB | ~40 images | `200m` (default) |
+| 1-2 cameras @ 4K | ~3-5 MB | ~20 images | `200m` |
+| 3-4 cameras @ 4K | ~3-5 MB | ~40 images | `300m` or higher |
+
+**Note**: Pi Zero 2 W has 512MB RAM. Keep tmpfs + application memory under ~450MB total.
+
+### Checking Current Usage
+
+The web UI dashboard shows queue storage usage in real-time:
+- **Healthy** (green): Under 50% capacity
+- **Catching Up** (yellow): 50-80% capacity  
+- **Critical** (red): Over 80% capacity
+
+You can also check via API:
+```bash
+curl http://localhost:1229/api/status | jq '.orchestrator.queue_storage'
+```
+
+### Changing the tmpfs Size
+
+The tmpfs size is set at container startup via Docker and cannot be changed without restarting the container.
+
+#### Raspberry Pi (install script)
+
+Edit the environment file, then restart:
+
+```bash
+# Edit the environment file
+sudo nano /data/aviationwx/environment
+
+# Uncomment and modify this line:
+AVIATIONWX_TMPFS_SIZE=300m
+
+# Restart to apply (uses supervisor to recreate container)
+sudo /usr/local/bin/aviationwx-supervisor update
+```
+
+#### Docker Run
+
+Change the `--tmpfs` size parameter:
+
+```bash
+docker stop aviationwx-bridge
+docker rm aviationwx-bridge
+docker run -d \
+  --name aviationwx-bridge \
+  --restart=unless-stopped \
+  -p 1229:1229 \
+  -v /data/aviationwx:/data \
+  --tmpfs /dev/shm:size=300m \
+  ghcr.io/alexwitherspoon/aviationwx-bridge:latest
+```
+
+#### Docker Compose
+
+Update the `tmpfs` size in your compose file:
+
+```yaml
+services:
+  aviationwx-bridge:
+    # ... other config ...
+    tmpfs:
+      - /dev/shm:size=300m  # Increased from default 200m
+```
+
+Then recreate the container:
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+#### Using Environment Variable (Docker Compose)
+
+For easier management, use the `AVIATIONWX_TMPFS_SIZE` environment variable:
+
+```yaml
+services:
+  aviationwx-bridge:
+    # ... other config ...
+    tmpfs:
+      - /dev/shm:size=${AVIATIONWX_TMPFS_SIZE:-200m}
+```
+
+Then set in your `.env` file:
+```bash
+AVIATIONWX_TMPFS_SIZE=300m
+```
+
+### Application-Level Queue Settings
+
+In addition to the tmpfs size (filesystem limit), the application has its own queue limits in `config.json`:
+
+```json
+{
+  "queue": {
+    "max_total_size_mb": 100,    // Max total queue size (all cameras)
+    "max_heap_mb": 400           // Trigger emergency thin if heap exceeds this
+  }
+}
+```
+
+The `max_total_size_mb` should be less than or equal to your tmpfs size. If you increase tmpfs, you may also want to increase this setting.
+
+---
+
 ## Resource Limits
 
 ### Raspberry Pi Zero 2 W (512MB RAM)
 
 The bridge is optimized for low memory:
 
-- Queue stored in tmpfs (RAM): 100MB default
+- Queue stored in tmpfs (RAM): 200MB default
 - Heap limit: 400MB
-- Typical usage: 150-250MB total
+- Typical usage: 150-300MB total
 
 ```yaml
 # Optional: enforce limits in Docker
 deploy:
   resources:
     limits:
-      memory: 300M
+      memory: 400M
 ```
 
 ### Disk Usage
@@ -364,11 +487,20 @@ curl -v ftps://upload.aviationwx.org:21
 # Check container memory
 docker stats aviationwx-bridge
 
-# If consistently high:
-# - Reduce queue size in config
-# - Reduce number of cameras
-# - Increase capture interval
+# Check queue storage usage
+curl http://localhost:1229/api/status | jq '.orchestrator.queue_storage'
 ```
+
+If memory usage is consistently high:
+- Check queue storage in web UI - if it's backing up, investigate upload issues
+- Reduce image resolution via camera settings or `image.max_width` in config
+- Increase capture interval to reduce queue buildup
+- If queue is healthy but memory is high, tmpfs may be oversized
+
+If queue shows "Critical" status frequently:
+- Increase tmpfs size (see [Queue Storage Configuration](#queue-storage-configuration))
+- Check upload connection stability
+- Reduce image quality to decrease file sizes
 
 ---
 

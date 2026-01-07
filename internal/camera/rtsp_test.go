@@ -180,3 +180,4 @@ func TestRTSPCamera_Capture_FFmpegNotAvailable(t *testing.T) {
 		t.Skip("ffmpeg is available - skipping ffmpeg not available test")
 	}
 }
+
