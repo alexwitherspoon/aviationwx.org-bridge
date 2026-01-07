@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **System Resources Dashboard**: Real-time monitoring with color-coded health indicators
+  - CPU usage with percentage and health level (green/yellow/red)
+  - Memory usage with system totals and Go heap stats
+  - Queue storage with capacity percentage and image count
+  - Overall system health badge (healthy/warning/critical)
+  - Uptime display
+
+- **Queue Storage Safeguards**: Multi-layer protection against storage exhaustion
+  - Pre-write space checking before image enqueue
+  - Automatic cleanup when filesystem space is low (<20% triggers thin, <10% triggers aggressive thin)
+  - Write failure recovery with retry after emergency cleanup
+  - Graceful capture pause when space cannot be freed
+  - Never crashes - always self-recovers
+
+- **Configurable tmpfs Size**: Flexible queue storage sizing
+  - Default increased from 100MB to 200MB for better multi-camera support
+  - Environment variable `AVIATIONWX_TMPFS_SIZE` for easy customization
+  - Environment file at `/data/aviationwx/environment` for Pi installations
+  - Sizing recommendations in documentation
+
+- **Queue Storage Documentation**: Comprehensive guide at `docs/QUEUE_STORAGE.md`
+  - Multi-layer defense system explanation with diagrams
+  - Space exhaustion recovery flowchart
+  - Queue thinning strategy visualization
+  - Sizing recommendations table
+  - Troubleshooting guide
+
 - **Web Console**: Modern web-based configuration interface
   - Dashboard with real-time status, camera overview, and queue health
   - Camera management (add, edit, delete cameras via UI)
@@ -78,6 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default web console port changed to `1229` (was 8080)
 - Default web console password is `aviationwx`
 - EXIF handling migrated from PHP to exiftool CLI
+- Default tmpfs size increased from 100MB to 200MB for better multi-camera support
+- Queue manager now monitors actual filesystem space (not just application counters)
 
 ### Deprecated
 - Global `upload` configuration (use per-camera instead)

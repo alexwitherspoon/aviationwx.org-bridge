@@ -56,7 +56,7 @@ docker run -d \
   --restart=unless-stopped \
   -p 1229:1229 \
   -v /opt/aviationwx/data:/data \
-  --tmpfs /dev/shm:size=100m \
+  --tmpfs /dev/shm:size=200m \
   ghcr.io/alexwitherspoon/aviationwx-bridge:latest
 ```
 
@@ -73,7 +73,7 @@ services:
     volumes:
       - ./data:/data
     tmpfs:
-      - /dev/shm:size=100m
+      - /dev/shm:size=200m  # Adjust based on camera count/resolution
 ```
 
 **Your responsibility:**
@@ -268,6 +268,7 @@ docker rm aviationwx-bridge
 
 - **[Local Development](docs/LOCAL_SETUP.md)** - Development environment setup
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment details
+- **[Queue & Memory Management](docs/QUEUE_STORAGE.md)** - How storage and memory are managed
 - **[Config Reference](docs/CONFIG_SCHEMA.md)** - Full configuration options
 - **[Changelog](CHANGELOG.md)** - Version history
 

@@ -17,6 +17,8 @@ secrets.env
 *.out
 go.work
 go.work.sum
+/bridge
+/aviationwx-bridge
 
 # Go dependencies
 vendor/
@@ -107,6 +109,8 @@ docs/*REVIEW*.md
 !docs/DEPLOYMENT.md
 !docs/API.md
 !docs/CONFIG_SCHEMA.md
+!docs/QUEUE_STORAGE.md
+
 
 
 

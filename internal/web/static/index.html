@@ -82,6 +82,52 @@
                     </div>
                 </div>
 
+                <!-- System Resources -->
+                <div class="card card-compact">
+                    <div class="card-header">
+                        <h2>System Resources</h2>
+                        <span class="system-overall-badge" id="systemOverallBadge">Healthy</span>
+                    </div>
+                    <div class="resource-grid">
+                        <!-- CPU -->
+                        <div class="resource-item">
+                            <div class="resource-header">
+                                <span class="resource-icon">⚡</span>
+                                <span class="resource-name">CPU</span>
+                                <span class="resource-value" id="cpuValue">0%</span>
+                            </div>
+                            <div class="resource-bar-container">
+                                <div class="resource-bar" id="cpuBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <!-- Memory -->
+                        <div class="resource-item">
+                            <div class="resource-header">
+                                <span class="resource-icon">🧠</span>
+                                <span class="resource-name">Memory</span>
+                                <span class="resource-value" id="memValue">0%</span>
+                            </div>
+                            <div class="resource-bar-container">
+                                <div class="resource-bar" id="memBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <!-- Queue Storage -->
+                        <div class="resource-item">
+                            <div class="resource-header">
+                                <span class="resource-icon">📦</span>
+                                <span class="resource-name">Queue</span>
+                                <span class="resource-value" id="queueValue">0%</span>
+                            </div>
+                            <div class="resource-bar-container">
+                                <div class="resource-bar" id="queueBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resource-details" id="resourceDetails">
+                        <span id="resourceDetailsText">CPU: 0% • Memory: 0 MB • Queue: 0 images</span>
+                    </div>
+                </div>
+
                 <!-- Camera Overview -->
                 <div class="card">
                     <div class="card-header">
