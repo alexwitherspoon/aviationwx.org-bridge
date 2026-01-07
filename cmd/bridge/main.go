@@ -17,6 +17,7 @@ import (
 	"github.com/alexwitherspoon/aviationwx-bridge/internal/update"
 	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
 	"github.com/alexwitherspoon/aviationwx-bridge/internal/web"
+	"github.com/alexwitherspoon/aviationwx-bridge/pkg/health"
 )
 
 // Build info set at compile time via ldflags
@@ -32,6 +33,7 @@ type Bridge struct {
 	orchestrator  *scheduler.Orchestrator
 	webServer     *web.Server
 	updateChecker *update.Checker
+	systemMonitor *health.SystemMonitor
 	log           *logger.Logger
 }
 
@@ -72,11 +74,18 @@ func main() {
 	updateChecker.Start()
 	log.Info("Update checker started")
 
+	// Get queue path for system monitor
+	queuePath := os.Getenv("AVIATIONWX_QUEUE_PATH")
+	if queuePath == "" {
+		queuePath = "/dev/shm/aviationwx"
+	}
+
 	// Create bridge
 	bridge := &Bridge{
 		config:        cfg,
 		configPath:    configPath,
 		updateChecker: updateChecker,
+		systemMonitor: health.NewSystemMonitor(queuePath),
 		log:           log,
 	}
 
@@ -346,11 +355,54 @@ func (b *Bridge) getStatus() interface{} {
 			"failed":        status.UploadStats.UploadsFailed,
 			"auth_failures": status.UploadStats.AuthFailures,
 		}
+
+		// Queue storage stats (for UI visibility)
+		result["queue_storage"] = map[string]interface{}{
+			"total_images":       status.GlobalQueueStats.TotalImages,
+			"total_size_mb":      status.GlobalQueueStats.TotalSizeMB,
+			"memory_usage_mb":    status.GlobalQueueStats.MemoryUsageMB,
+			"memory_limit_mb":    status.GlobalQueueStats.MemoryLimitMB,
+			"capacity_percent":   calculateCapacityPercent(status.GlobalQueueStats.TotalSizeMB, status.GlobalQueueStats.MemoryLimitMB),
+			"filesystem_free_mb": status.GlobalQueueStats.FilesystemFreeMB,
+			"filesystem_used_mb": status.GlobalQueueStats.FilesystemUsedMB,
+		}
 	} else {
 		result["running"] = false
 		result["uploads_today"] = 0
 		result["queue_size"] = 0
 		result["ntp_healthy"] = true
+		result["queue_storage"] = map[string]interface{}{
+			"total_images":       0,
+			"total_size_mb":      0.0,
+			"memory_usage_mb":    0.0,
+			"memory_limit_mb":    100,
+			"capacity_percent":   0.0,
+			"filesystem_free_mb": 0.0,
+			"filesystem_used_mb": 0.0,
+		}
+	}
+
+	// Add system resource stats
+	if b.systemMonitor != nil {
+		sysStats := b.systemMonitor.GetStats()
+		result["system"] = map[string]interface{}{
+			"cpu_percent":    sysStats.CPUPercent,
+			"cpu_level":      sysStats.CPULevel,
+			"num_goroutines": sysStats.NumGoroutines,
+			"num_cpu":        sysStats.NumCPU,
+			"mem_used_mb":    sysStats.MemUsedMB,
+			"mem_total_mb":   sysStats.MemTotalMB,
+			"mem_percent":    sysStats.MemPercent,
+			"mem_level":      sysStats.MemLevel,
+			"heap_alloc_mb":  sysStats.HeapAllocMB,
+			"disk_used_mb":   sysStats.DiskUsedMB,
+			"disk_free_mb":   sysStats.DiskFreeMB,
+			"disk_total_mb":  sysStats.DiskTotalMB,
+			"disk_percent":   sysStats.DiskPercent,
+			"disk_level":     sysStats.DiskLevel,
+			"overall_level":  sysStats.OverallLevel,
+			"uptime":         sysStats.Uptime,
+		}
 	}
 
 	return result
@@ -480,4 +532,16 @@ func saveConfig(path string, cfg *config.Config) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0644)
+}
+
+// calculateCapacityPercent calculates percentage of queue capacity used
+func calculateCapacityPercent(usedMB float64, limitMB int) float64 {
+	if limitMB <= 0 {
+		return 0
+	}
+	percent := (usedMB / float64(limitMB)) * 100
+	if percent > 100 {
+		percent = 100
+	}
+	return percent
 }

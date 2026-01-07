@@ -23,6 +23,8 @@ IMAGE_NAME="ghcr.io/${GITHUB_REPO}"
 CONTAINER_NAME="aviationwx-bridge"
 DATA_DIR="/data/aviationwx"
 WEB_PORT="1229"
+ENV_FILE="${DATA_DIR}/environment"
+DEFAULT_TMPFS_SIZE="200m"
 
 # Timeouts and intervals
 HEALTH_TIMEOUT=120          # Seconds to wait for health check
@@ -38,6 +40,20 @@ LOG_FILE="${DATA_DIR}/supervisor.log"
 
 # Ensure data directory exists
 mkdir -p "${DATA_DIR}"
+
+# Load environment overrides if present
+load_environment() {
+    if [[ -f "${ENV_FILE}" ]]; then
+        # shellcheck source=/dev/null
+        source "${ENV_FILE}"
+    fi
+}
+
+# Get tmpfs size from environment or use default
+get_tmpfs_size() {
+    load_environment
+    echo "${AVIATIONWX_TMPFS_SIZE:-${DEFAULT_TMPFS_SIZE}}"
+}
 
 # Logging
 log() {
@@ -96,6 +112,8 @@ check_health() {
 do_update() {
     local new_version="$1"
     local new_tag="${2:-$new_version}"
+    local tmpfs_size
+    tmpfs_size=$(get_tmpfs_size)
 
     log_info "Starting update to ${new_version}"
 
@@ -120,13 +138,13 @@ do_update() {
     docker rm "${CONTAINER_NAME}" 2>/dev/null || true
 
     # Start new container
-    log_info "Starting new container with ${new_tag}"
+    log_info "Starting new container with ${new_tag} (tmpfs: ${tmpfs_size})"
     docker run -d \
         --name "${CONTAINER_NAME}" \
         --restart=unless-stopped \
         -p "${WEB_PORT}:${WEB_PORT}" \
         -v "${DATA_DIR}:/data" \
-        --tmpfs /dev/shm:size=100m \
+        --tmpfs /dev/shm:size="${tmpfs_size}" \
         "${IMAGE_NAME}:${new_tag}"
 
     # Wait for health check
@@ -151,8 +169,9 @@ do_rollback() {
         return 1
     fi
 
-    local rollback_version
+    local rollback_version tmpfs_size
     rollback_version=$(cat "${ROLLBACK_VERSION_FILE}")
+    tmpfs_size=$(get_tmpfs_size)
     log_warn "Rolling back to ${rollback_version}"
 
     # Stop current container
@@ -165,7 +184,7 @@ do_rollback() {
         --restart=unless-stopped \
         -p "${WEB_PORT}:${WEB_PORT}" \
         -v "${DATA_DIR}:/data" \
-        --tmpfs /dev/shm:size=100m \
+        --tmpfs /dev/shm:size="${tmpfs_size}" \
         "${IMAGE_NAME}:${rollback_version}"
 
     if check_health; then
@@ -358,4 +377,5 @@ main() {
 }
 
 main "$@"
+
 

@@ -147,11 +147,13 @@ type QueueStats struct {
 
 // GlobalQueueStats provides global statistics
 type GlobalQueueStats struct {
-	TotalImages   int          `json:"total_images"`
-	TotalSizeMB   float64      `json:"total_size_mb"`
-	CameraStats   []QueueStats `json:"camera_stats"`
-	MemoryUsageMB float64      `json:"memory_usage_mb"`
-	MemoryLimitMB int          `json:"memory_limit_mb"`
+	TotalImages      int          `json:"total_images"`
+	TotalSizeMB      float64      `json:"total_size_mb"`
+	CameraStats      []QueueStats `json:"camera_stats"`
+	MemoryUsageMB    float64      `json:"memory_usage_mb"`
+	MemoryLimitMB    int          `json:"memory_limit_mb"`
+	FilesystemFreeMB float64      `json:"filesystem_free_mb"`
+	FilesystemUsedMB float64      `json:"filesystem_used_mb"`
 }
 
 // Queue manages a single camera's image queue

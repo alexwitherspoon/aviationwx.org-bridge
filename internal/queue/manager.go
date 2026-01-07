@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -125,12 +126,25 @@ func (m *Manager) GetGlobalStats() GlobalQueueStats {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
 
+	// Get filesystem stats
+	var filesystemFreeMB, filesystemUsedMB float64
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(m.globalConfig.BasePath, &stat); err == nil {
+		totalBytes := stat.Blocks * uint64(stat.Bsize)
+		freeBytes := stat.Bavail * uint64(stat.Bsize)
+		usedBytes := totalBytes - freeBytes
+		filesystemFreeMB = float64(freeBytes) / (1024 * 1024)
+		filesystemUsedMB = float64(usedBytes) / (1024 * 1024)
+	}
+
 	return GlobalQueueStats{
-		TotalImages:   totalImages,
-		TotalSizeMB:   float64(totalSize) / (1024 * 1024),
-		CameraStats:   cameraStats,
-		MemoryUsageMB: float64(mem.HeapAlloc) / (1024 * 1024),
-		MemoryLimitMB: m.globalConfig.MaxHeapMB,
+		TotalImages:      totalImages,
+		TotalSizeMB:      float64(totalSize) / (1024 * 1024),
+		CameraStats:      cameraStats,
+		MemoryUsageMB:    float64(mem.HeapAlloc) / (1024 * 1024),
+		MemoryLimitMB:    m.globalConfig.MaxHeapMB,
+		FilesystemFreeMB: filesystemFreeMB,
+		FilesystemUsedMB: filesystemUsedMB,
 	}
 }
 
@@ -187,6 +201,9 @@ func (m *Manager) checkMemoryPressure() {
 		}
 	}
 
+	// Check actual filesystem space (critical safety check)
+	m.checkFilesystemSpace()
+
 	// Check system memory (heap usage)
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
@@ -204,6 +221,41 @@ func (m *Manager) checkMemoryPressure() {
 
 		// Force garbage collection
 		runtime.GC()
+	}
+}
+
+// checkFilesystemSpace checks actual tmpfs free space and triggers cleanup if needed
+func (m *Manager) checkFilesystemSpace() {
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(m.globalConfig.BasePath, &stat); err != nil {
+		// Can't check, skip
+		return
+	}
+
+	totalBytes := stat.Blocks * uint64(stat.Bsize)
+	freeBytes := stat.Bavail * uint64(stat.Bsize)
+
+	// If less than 10% free space, trigger emergency cleanup
+	freePercent := float64(freeBytes) / float64(totalBytes) * 100
+	if freePercent < 10 {
+		m.logger.Warn("Filesystem critically low on space",
+			"free_mb", float64(freeBytes)/(1024*1024),
+			"total_mb", float64(totalBytes)/(1024*1024),
+			"free_percent", freePercent)
+
+		// Aggressive emergency thin all queues - keep only 30%
+		for _, q := range m.queues {
+			q.EmergencyThin(0.3)
+		}
+	} else if freePercent < 20 {
+		m.logger.Info("Filesystem space getting low",
+			"free_mb", float64(freeBytes)/(1024*1024),
+			"free_percent", freePercent)
+
+		// Moderate thinning - keep 50%
+		for _, q := range m.queues {
+			q.EmergencyThin(0.5)
+		}
 	}
 }
 
