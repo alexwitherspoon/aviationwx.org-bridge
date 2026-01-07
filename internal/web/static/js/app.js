@@ -155,7 +155,69 @@ function updateStatusDisplay() {
                 updateEl.style.display = 'none';
             }
         }
+        
+        // Update system resources display (includes queue storage)
+        updateSystemResourcesDisplay(orch.system, orch.queue_storage);
     }
+}
+
+// System resources display
+function updateSystemResourcesDisplay(system, queueStorage) {
+    // CPU
+    const cpuPercent = system?.cpu_percent || 0;
+    const cpuLevel = system?.cpu_level || 'healthy';
+    updateResourceBar('cpu', cpuPercent, cpuLevel, `${cpuPercent.toFixed(0)}%`);
+    
+    // Memory
+    const memPercent = system?.mem_percent || 0;
+    const memLevel = system?.mem_level || 'healthy';
+    const memUsed = system?.mem_used_mb || 0;
+    updateResourceBar('mem', memPercent, memLevel, `${memPercent.toFixed(0)}%`);
+    
+    // Queue storage
+    const queuePercent = queueStorage?.capacity_percent || 0;
+    const queueLevel = queuePercent >= 80 ? 'critical' : queuePercent >= 50 ? 'warning' : 'healthy';
+    const queueImages = queueStorage?.total_images || 0;
+    updateResourceBar('queue', queuePercent, queueLevel, `${queuePercent.toFixed(0)}%`);
+    
+    // Overall badge
+    const overallLevel = system?.overall_level || 'healthy';
+    const badgeEl = document.getElementById('systemOverallBadge');
+    if (badgeEl) {
+        badgeEl.classList.remove('healthy', 'warning', 'critical');
+        badgeEl.classList.add(overallLevel);
+        badgeEl.textContent = overallLevel === 'healthy' ? 'Healthy' : 
+                              overallLevel === 'warning' ? 'Warning' : 'Critical';
+    }
+    
+    // Details text
+    const detailsEl = document.getElementById('resourceDetailsText');
+    if (detailsEl) {
+        const uptime = system?.uptime || '--';
+        detailsEl.textContent = `CPU: ${cpuPercent.toFixed(0)}% • Memory: ${memUsed.toFixed(0)} MB • Queue: ${queueImages} images • Uptime: ${uptime}`;
+    }
+}
+
+// Update a single resource bar with level coloring
+function updateResourceBar(name, percent, level, valueText) {
+    const valueEl = document.getElementById(`${name}Value`);
+    const barEl = document.getElementById(`${name}Bar`);
+    
+    if (valueEl) {
+        valueEl.textContent = valueText;
+    }
+    
+    if (barEl) {
+        barEl.style.width = `${Math.min(percent, 100)}%`;
+        barEl.classList.remove('healthy', 'warning', 'critical');
+        barEl.classList.add(level);
+    }
+}
+
+// Legacy queue storage display (for backwards compatibility)
+function updateQueueStorageDisplay(storage) {
+    // This is now handled by updateSystemResourcesDisplay
+    // Keeping for any direct calls
 }
 
 // Camera displays

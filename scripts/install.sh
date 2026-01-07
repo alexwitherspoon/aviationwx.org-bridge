@@ -21,6 +21,14 @@ IMAGE_NAME="ghcr.io/${REPO}"
 CONTAINER_NAME="aviationwx-bridge"
 DATA_DIR="/data/aviationwx"
 WEB_PORT="1229"
+ENV_FILE="${DATA_DIR}/environment"
+
+# Default tmpfs size (can be overridden in environment file)
+# Sizing guide:
+#   1-2 cameras @ 1080p: 100m
+#   3-4 cameras @ 1080p: 200m (default)
+#   4 cameras @ 4K: 300m or higher
+DEFAULT_TMPFS_SIZE="200m"
 
 # Colors for output
 RED='\033[0;31m'
@@ -95,11 +103,34 @@ install_docker() {
     log_success "Docker installed successfully"
 }
 
-# Create data directory
+# Create data directory and environment file
 setup_data_dir() {
     log_info "Setting up data directory: ${DATA_DIR}"
     mkdir -p "${DATA_DIR}"
     chmod 755 "${DATA_DIR}"
+
+    # Create environment file if it doesn't exist
+    if [[ ! -f "${ENV_FILE}" ]]; then
+        cat > "${ENV_FILE}" << 'EOF'
+# AviationWX Bridge Environment Configuration
+# Edit this file to customize settings, then restart the container.
+#
+# Tmpfs size for image queue (RAM-based storage)
+# Default: 200m (200 megabytes)
+#
+# Sizing recommendations:
+#   1-2 cameras @ 1080p: 100m is sufficient
+#   3-4 cameras @ 1080p: 200m recommended (default)
+#   1-2 cameras @ 4K:    200m recommended
+#   3-4 cameras @ 4K:    300m or higher
+#
+# Note: Pi Zero 2 W has 512MB RAM. Keep this + application memory under ~450MB total.
+#
+# AVIATIONWX_TMPFS_SIZE=200m
+EOF
+        log_info "Created environment file: ${ENV_FILE}"
+    fi
+
     log_success "Data directory ready"
 }
 
@@ -155,8 +186,26 @@ EOF
     log_success "Supervisor installed and timer enabled"
 }
 
+# Load environment overrides if present
+load_environment() {
+    if [[ -f "${ENV_FILE}" ]]; then
+        log_info "Loading environment from ${ENV_FILE}"
+        # shellcheck source=/dev/null
+        source "${ENV_FILE}"
+    fi
+}
+
+# Get tmpfs size from environment or use default
+get_tmpfs_size() {
+    echo "${AVIATIONWX_TMPFS_SIZE:-${DEFAULT_TMPFS_SIZE}}"
+}
+
 # Pull and start the container
 start_container() {
+    load_environment
+    local tmpfs_size
+    tmpfs_size=$(get_tmpfs_size)
+
     log_info "Pulling latest AviationWX Bridge image..."
     docker pull "${IMAGE_NAME}:latest"
 
@@ -167,13 +216,13 @@ start_container() {
         docker rm "${CONTAINER_NAME}" 2>/dev/null || true
     fi
 
-    log_info "Starting AviationWX Bridge..."
+    log_info "Starting AviationWX Bridge (tmpfs: ${tmpfs_size})..."
     docker run -d \
         --name "${CONTAINER_NAME}" \
         --restart=unless-stopped \
         -p "${WEB_PORT}:${WEB_PORT}" \
         -v "${DATA_DIR}:/data" \
-        --tmpfs /dev/shm:size=100m \
+        --tmpfs /dev/shm:size="${tmpfs_size}" \
         "${IMAGE_NAME}:latest"
 
     # Wait for container to be healthy

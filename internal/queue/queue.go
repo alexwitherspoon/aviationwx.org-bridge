@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -99,6 +100,17 @@ func (q *Queue) Enqueue(imageData []byte, observationTime time.Time, timeSource,
 		return ErrImageExpired
 	}
 
+	imageSize := int64(len(imageData))
+
+	// Pre-check: ensure we have space before attempting write
+	// This prevents "no space" errors which are harder to recover from
+	if !q.hasSpaceForImageLocked(imageSize) {
+		q.logger.Warn("Low space detected, triggering preemptive cleanup",
+			"camera", q.state.CameraID,
+			"image_size", imageSize)
+		q.emergencyThinForSpaceLocked(imageSize)
+	}
+
 	// Generate filename from observation time (milliseconds for uniqueness)
 	filename := fmt.Sprintf("%d.jpg", observationTime.UnixMilli())
 	filePath := filepath.Join(q.state.Directory, filename)
@@ -113,20 +125,27 @@ func (q *Queue) Enqueue(imageData []byte, observationTime time.Time, timeSource,
 		filePath = filepath.Join(q.state.Directory, filename)
 	}
 
-	// Write file atomically
-	tmpPath := filePath + ".tmp"
-	if err := os.WriteFile(tmpPath, imageData, 0644); err != nil {
-		return fmt.Errorf("write temp file: %w", err)
+	// Attempt to write file (with retry on space error)
+	written, err := q.writeImageWithRetry(filePath, imageData)
+	if err != nil {
+		return err
 	}
-
-	if err := os.Rename(tmpPath, filePath); err != nil {
-		os.Remove(tmpPath)
-		return fmt.Errorf("rename to final: %w", err)
+	if !written {
+		// Space couldn't be freed even after emergency cleanup
+		// This is a critical situation - pause capture to prevent data loss
+		q.state.CapturePaused = true
+		select {
+		case q.pauseCapture <- struct{}{}:
+		default:
+		}
+		q.logger.Error("Cannot free enough space for new image, pausing capture",
+			"camera", q.state.CameraID)
+		return ErrQueueFull
 	}
 
 	// Update state
 	q.state.ImageCount++
-	q.state.TotalSizeBytes += int64(len(imageData))
+	q.state.TotalSizeBytes += imageSize
 	q.state.ImagesQueued++
 
 	if observationTime.After(q.state.NewestTimestamp) {
@@ -149,6 +168,139 @@ func (q *Queue) Enqueue(imageData []byte, observationTime time.Time, timeSource,
 		"queue_size", q.state.ImageCount)
 
 	return nil
+}
+
+// writeImageWithRetry attempts to write an image, retrying once after cleanup if space error
+func (q *Queue) writeImageWithRetry(filePath string, imageData []byte) (bool, error) {
+	tmpPath := filePath + ".tmp"
+
+	// First attempt
+	err := os.WriteFile(tmpPath, imageData, 0644)
+	if err == nil {
+		// Write succeeded, finalize
+		if renameErr := os.Rename(tmpPath, filePath); renameErr != nil {
+			os.Remove(tmpPath)
+			return false, fmt.Errorf("rename to final: %w", renameErr)
+		}
+		return true, nil
+	}
+
+	// Check if it's a space error
+	if !isNoSpaceError(err) {
+		return false, fmt.Errorf("write temp file: %w", err)
+	}
+
+	// Space error - attempt emergency cleanup and retry
+	q.logger.Warn("Write failed due to no space, attempting emergency cleanup",
+		"camera", q.state.CameraID)
+
+	// Remove failed temp file if it exists
+	os.Remove(tmpPath)
+
+	// Emergency thin - keep only 30% of files
+	q.emergencyThinLocked(0.3)
+
+	// Retry write
+	err = os.WriteFile(tmpPath, imageData, 0644)
+	if err != nil {
+		if isNoSpaceError(err) {
+			q.logger.Error("Still no space after emergency cleanup",
+				"camera", q.state.CameraID)
+			return false, nil // Signal caller to pause capture
+		}
+		return false, fmt.Errorf("write temp file after cleanup: %w", err)
+	}
+
+	// Write succeeded after retry
+	if err := os.Rename(tmpPath, filePath); err != nil {
+		os.Remove(tmpPath)
+		return false, fmt.Errorf("rename to final: %w", err)
+	}
+
+	q.logger.Info("Write succeeded after emergency cleanup",
+		"camera", q.state.CameraID)
+	return true, nil
+}
+
+// hasSpaceForImageLocked checks if there's space (must hold lock)
+func (q *Queue) hasSpaceForImageLocked(sizeBytes int64) bool {
+	freeSpace, err := q.getFreeSpace()
+	if err != nil {
+		return true // Optimistic if we can't check
+	}
+	// Need 2x size for tmp file + final
+	return freeSpace > sizeBytes*2
+}
+
+// emergencyThinForSpaceLocked frees up space for an incoming image
+func (q *Queue) emergencyThinForSpaceLocked(neededBytes int64) {
+	files, err := q.listFilesSortedLocked()
+	if err != nil || len(files) <= 1 {
+		return
+	}
+
+	// Always keep at least the newest file
+	removed := 0
+	for i := 0; i < len(files)-1; i++ {
+		file := files[i]
+		filePath := filepath.Join(q.state.Directory, file.Name())
+		if err := os.Remove(filePath); err == nil {
+			q.state.ImageCount--
+			q.state.TotalSizeBytes -= file.Size()
+			q.state.ImagesThinned++
+			removed++
+		}
+
+		// Check if we've freed enough
+		if q.hasSpaceForImageLocked(neededBytes) {
+			break
+		}
+	}
+
+	if removed > 0 {
+		q.recalculateOldestLocked()
+		q.logger.Warn("Emergency space cleanup completed",
+			"camera", q.state.CameraID,
+			"removed", removed,
+			"remaining", q.state.ImageCount)
+	}
+}
+
+// emergencyThinLocked is an internal version that assumes lock is held
+func (q *Queue) emergencyThinLocked(keepRatio float64) int {
+	files, err := q.listFilesSortedLocked()
+	if err != nil || len(files) == 0 {
+		return 0
+	}
+
+	keepCount := int(float64(len(files)) * keepRatio)
+	if keepCount < 1 {
+		keepCount = 1
+	}
+
+	if keepCount >= len(files) {
+		return 0
+	}
+
+	toRemove := files[:len(files)-keepCount]
+
+	removed := 0
+	for _, file := range toRemove {
+		filePath := filepath.Join(q.state.Directory, file.Name())
+		if err := os.Remove(filePath); err == nil {
+			q.state.ImageCount--
+			q.state.TotalSizeBytes -= file.Size()
+			q.state.ImagesThinned++
+			removed++
+		}
+	}
+
+	if removed > 0 {
+		q.recalculateOldestLocked()
+		q.updateHealthLevelLocked()
+	}
+
+	return removed
 }
 
 // Dequeue returns the oldest image in the queue without removing it
@@ -627,3 +779,46 @@ func parseTimestampFromFilename(filename string) time.Time {
 	}
 	return time.UnixMilli(ms).UTC()
 }
+
+// getFreeSpace returns the available bytes in the queue directory filesystem
+func (q *Queue) getFreeSpace() (int64, error) {
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs(q.state.Directory, &stat); err != nil {
+		return 0, err
+	}
+	// Available blocks * block size
+	return int64(stat.Bavail) * int64(stat.Bsize), nil
+}
+
+// hasSpaceForImage checks if there's enough space for an image of the given size
+// Requires at least 2x the image size as a safety margin
+func (q *Queue) hasSpaceForImage(sizeBytes int64) bool {
+	freeSpace, err := q.getFreeSpace()
+	if err != nil {
+		// If we can't check, be optimistic but log
+		q.logger.Warn("Could not check free space",
+			"camera", q.state.CameraID,
+			"error", err)
+		return true
+	}
+
+	// Require 2x image size as margin (for atomic write tmp file + final)
+	required := sizeBytes * 2
+	return freeSpace > required
+}
+
+// isNoSpaceError checks if an error is a "no space left on device" error
+func isNoSpaceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// Check for ENOSPC
+	if pathErr, ok := err.(*os.PathError); ok {
+		if errno, ok := pathErr.Err.(syscall.Errno); ok {
+			return errno == syscall.ENOSPC
+		}
+	}
+	// Also check error message as fallback
+	return strings.Contains(err.Error(), "no space left")
+}
+
