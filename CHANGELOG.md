@@ -5,6 +5,19 @@ All notable changes to AviationWX Bridge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Safety-Critical EXIF Tests**: Comprehensive test coverage for aviation safety
+  - `TestEXIF_UTCEnforcement` - Validates UTC timestamps across 6 timezones
+  - `TestEXIF_MarkerValidation` - Validates "AviationWX-Bridge:UTC:v1" marker format
+  - `TestEXIF_NTPFailureHandling` - Tests NTP unhealthy scenarios with proper warnings
+  - `TestEXIF_TimeInFuture` - Tests camera clock error detection and rejection
+  - Increased `internal/time` coverage from 84.6% to 85.4%
+- **Test Coverage Analysis**: Comprehensive documentation of test coverage and safety-critical paths
+  - `TEST_COVERAGE_ANALYSIS.md` - Detailed coverage analysis by package with priority matrix
+  - `TEST_IMPLEMENTATION_SUMMARY.md` - Production readiness assessment and recommendations
+
 ## [2.0.1] - 2026-01-18
 
 **Hot-Reload Fixes** - Complete global settings hot-reload support
