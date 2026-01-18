@@ -420,6 +420,7 @@ function getCameraFormHtml(cam = null) {
                         <option value="">-- Select Type --</option>
                         <option value="http" ${cam?.type === 'http' ? 'selected' : ''}>HTTP Snapshot</option>
                         <option value="rtsp" ${cam?.type === 'rtsp' ? 'selected' : ''}>RTSP Stream</option>
+                        <option value="onvif" ${cam?.type === 'onvif' ? 'selected' : ''}>ONVIF Camera</option>
                     </select>
                 </div>
                 
@@ -464,6 +465,36 @@ function getCameraFormHtml(cam = null) {
                             <input type="password" id="camRtspPass" class="form-control" 
                                    placeholder="••••••••">
                         </div>
+                    </div>
+                </div>
+                
+                <div id="onvifFields" style="display: ${cam?.type === 'onvif' ? 'block' : 'none'}">
+                    <div class="form-group">
+                        <label for="camOnvifEndpoint">ONVIF Endpoint</label>
+                        <input type="text" id="camOnvifEndpoint" class="form-control" 
+                               value="${cam?.onvif?.endpoint || ''}"
+                               placeholder="http://192.168.1.100/onvif/device_service">
+                        <small>Full ONVIF device service URL</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="camOnvifUser">ONVIF Username</label>
+                            <input type="text" id="camOnvifUser" class="form-control" 
+                                   value="${cam?.onvif?.username || ''}"
+                                   placeholder="admin">
+                        </div>
+                        <div class="form-group">
+                            <label for="camOnvifPass">ONVIF Password</label>
+                            <input type="password" id="camOnvifPass" class="form-control" 
+                                   placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="camOnvifProfile">Profile Token (optional)</label>
+                        <input type="text" id="camOnvifProfile" class="form-control" 
+                               value="${cam?.onvif?.profile_token || ''}"
+                               placeholder="profile_1">
+                        <small>Leave empty to use default profile</small>
                     </div>
                 </div>
                 
@@ -581,6 +612,7 @@ function updateCameraTypeFields() {
     const type = document.getElementById('camType').value;
     document.getElementById('httpFields').style.display = type === 'http' ? 'block' : 'none';
     document.getElementById('rtspFields').style.display = type === 'rtsp' ? 'block' : 'none';
+    document.getElementById('onvifFields').style.display = type === 'onvif' ? 'block' : 'none';
 }
 
 function updateImagePreset() {
@@ -659,6 +691,13 @@ async function saveCamera(event, existingId = null) {
             url: document.getElementById('camRtspUrl').value,
             username: document.getElementById('camRtspUser').value,
             password: document.getElementById('camRtspPass').value,
+        };
+    } else if (type === 'onvif') {
+        camera.onvif = {
+            endpoint: document.getElementById('camOnvifEndpoint').value,
+            username: document.getElementById('camOnvifUser').value,
+            password: document.getElementById('camOnvifPass').value,
+            profile_token: document.getElementById('camOnvifProfile').value || undefined,
         };
     }
     

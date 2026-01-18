@@ -14,11 +14,12 @@ import (
 
 // UploadWorker handles uploading queued images to the server
 // Uses round-robin across camera queues with fail2ban-aware retry logic
+// Each camera has its own uploader with independent credentials
 type UploadWorker struct {
-	queues     map[string]*queue.Queue // Camera ID -> Queue
-	queueOrder []string                // Order for round-robin
-	configs    map[string]CameraConfig // Camera ID -> Config
-	uploader   upload.Client
+	queues     map[string]*queue.Queue  // Camera ID -> Queue
+	queueOrder []string                 // Order for round-robin
+	configs    map[string]CameraConfig  // Camera ID -> Config
+	uploaders  map[string]upload.Client // Camera ID -> Uploader (per-camera credentials)
 	ctx        context.Context
 	cancel     context.CancelFunc
 	mu         sync.RWMutex
@@ -52,8 +53,8 @@ type uploadFailureState struct {
 }
 
 // UploadWorkerConfig configures the upload worker
+// Note: Individual uploaders are set per-camera via AddQueue
 type UploadWorkerConfig struct {
-	Uploader          upload.Client
 	MinUploadInterval time.Duration // Default: 1 second
 	AuthBackoff       time.Duration // Default: 60 seconds
 	RetryDelay        time.Duration // Default: 5 seconds
@@ -89,7 +90,7 @@ func NewUploadWorker(cfg UploadWorkerConfig) *UploadWorker {
 		queues:            make(map[string]*queue.Queue),
 		queueOrder:        make([]string, 0),
 		configs:           make(map[string]CameraConfig),
-		uploader:          cfg.Uploader,
+		uploaders:         make(map[string]upload.Client),
 		ctx:               ctx,
 		cancel:            cancel,
 		logger:            logger,
@@ -100,15 +101,35 @@ func NewUploadWorker(cfg UploadWorkerConfig) *UploadWorker {
 	}
 }
 
-// AddQueue adds a camera queue to the upload worker
-func (w *UploadWorker) AddQueue(cameraID string, q *queue.Queue, config CameraConfig) {
+// AddQueue adds a camera queue to the upload worker with its own uploader
+func (w *UploadWorker) AddQueue(cameraID string, q *queue.Queue, config CameraConfig, uploader upload.Client) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	w.queues[cameraID] = q
 	w.configs[cameraID] = config
+	w.uploaders[cameraID] = uploader
 	w.queueOrder = append(w.queueOrder, cameraID)
 	w.cameraFailures[cameraID] = &uploadFailureState{}
+}
+
+// RemoveQueue removes a camera queue from the upload worker
+func (w *UploadWorker) RemoveQueue(cameraID string) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	delete(w.queues, cameraID)
+	delete(w.configs, cameraID)
+	delete(w.uploaders, cameraID)
+	delete(w.cameraFailures, cameraID)
+
+	// Remove from queueOrder
+	for i, id := range w.queueOrder {
+		if id == cameraID {
+			w.queueOrder = append(w.queueOrder[:i], w.queueOrder[i+1:]...)
+			break
+		}
+	}
 }
 
 // Start begins the upload loop
@@ -205,6 +226,7 @@ func (w *UploadWorker) run() {
 		cameraID := w.queueOrder[currentIdx%len(w.queueOrder)]
 		q := w.queues[cameraID]
 		config := w.configs[cameraID]
+		uploader := w.uploaders[cameraID]
 		failState := w.cameraFailures[cameraID]
 		w.mu.RUnlock()
 
@@ -213,6 +235,12 @@ func (w *UploadWorker) run() {
 		// Check if camera is in backoff
 		if time.Now().Before(failState.backoffUntil) {
 			continue // Skip this camera, try next
+		}
+
+		// Check if uploader exists for this camera
+		if uploader == nil {
+			w.logger.Error("No uploader configured for camera", "camera", cameraID)
+			continue
 		}
 
 		// Try to get an image from this camera's queue
@@ -229,8 +257,8 @@ func (w *UploadWorker) run() {
 		// Format: {remote_path}/{timestamp_ms}.jpg
 		remotePath := w.buildRemotePath(config.RemotePath, cameraID, img.Timestamp)
 
-		// Attempt upload
-		success := w.uploadWithRetry(cameraID, img, remotePath)
+		// Attempt upload with this camera's uploader
+		success := w.uploadWithRetry(cameraID, uploader, img, remotePath)
 
 		if success {
 			// Mark as uploaded (removes from queue)
@@ -247,7 +275,7 @@ func (w *UploadWorker) run() {
 	}
 }
 
-func (w *UploadWorker) uploadWithRetry(cameraID string, img *queue.QueuedImage, remotePath string) bool {
+func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, img *queue.QueuedImage, remotePath string) bool {
 	w.mu.Lock()
 	w.uploadsTotal++
 	w.lastUploadTime = time.Now()
@@ -264,7 +292,7 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, img *queue.QueuedImage, 
 	}
 
 	// First attempt
-	err = w.uploader.Upload(remotePath, imageData)
+	err = uploader.Upload(remotePath, imageData)
 	if err == nil {
 		w.recordSuccess()
 		w.logger.Debug("Upload successful",
@@ -293,7 +321,7 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, img *queue.QueuedImage, 
 	w.uploadsRetried++
 	w.mu.Unlock()
 
-	err = w.uploader.Upload(remotePath, imageData)
+	err = uploader.Upload(remotePath, imageData)
 	if err == nil {
 		w.recordSuccess()
 		w.logger.Info("Upload succeeded on retry",

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Upload**: Fixed cameras uploading to wrong FTP targets (per-camera credentials bug)
+  - Each camera now has its own independent uploader with separate credentials
+  - Previously, the last camera's uploader credentials were used for all cameras
+  - Refactored `UploadWorker` to store per-camera uploaders instead of shared uploader
+  - Updated `Orchestrator.AddCamera()` to accept uploader parameter
+  - **Breaking change**: Removed `Orchestrator.SetUploader()` method (no longer needed)
+
+### Added
+- **Upload**: Custom CA bundle support for FTPS connections
+  - Servers with custom SSL certificates can now be configured
+  - Set `ca_bundle_path` in upload configuration to load custom root CAs
+  - Falls back to system default CAs when path not specified
+- **Hot-reload**: Full camera configuration hot-reload without restart
+  - Added cameras are automatically started in orchestrator
+  - Deleted cameras are gracefully stopped and removed
+  - Updated cameras are automatically restarted with new configuration
+  - Detects changes in all camera settings (type, auth, upload, image processing)
+  - Queues and preview cache are properly managed during changes
+- **Preview**: Added in-memory preview cache for instant loading
+  - Camera preview images load instantly (<50ms) vs 20-30s before
+  - Cache stores last captured image (after resize/quality processing)
+  - Falls back to "no preview" if cache empty (avoids slow initial captures)
+  - Memory usage: ~2-5MB per camera
+  - Updated every capture cycle (60s default)
+- **Tests**: Comprehensive test coverage for upload and orchestrator
+  - Added `upload_percamera_test.go` with 9 test functions
+  - Added `orchestrator_test.go` with 9 test functions
+  - Tests cover per-camera uploaders, hot-reload, and configuration
+
 ## [1.0.2] - 2026-01-18
 
 **Bugfix release** - Permissions and port configuration
