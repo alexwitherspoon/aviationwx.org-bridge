@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Install**: Install script now uses `:latest` tag for stable releases
+  - Changed from `:edge` to `:latest` after v1.0.0 release
+  - Users get stable, tested releases by default
+  - `:edge` tag still available for testing development builds
+
 ## [1.0.0] - 2026-01-18
 
 First production release of AviationWX Bridge! 🎉
