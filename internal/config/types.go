@@ -81,7 +81,7 @@ type Upload struct {
 func DefaultUpload() Upload {
 	return Upload{
 		Host:                  "upload.aviationwx.org",
-		Port:                  21,
+		Port:                  2121,
 		TLS:                   true,
 		TLSVerify:             true,
 		TimeoutConnectSeconds: 30,
