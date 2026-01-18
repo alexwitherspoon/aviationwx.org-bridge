@@ -2,6 +2,14 @@
 # Stage 1: Build Go binary
 FROM golang:1.24-alpine AS builder
 
+# Build arguments for multi-arch support
+# These are automatically set by Docker buildx when building multi-platform images
+# Do NOT set defaults - let buildx inject them automatically
+ARG TARGETOS
+ARG TARGETARCH
+ARG VERSION=dev
+ARG GIT_COMMIT=unknown
+
 # Install build dependencies
 RUN apk add --no-cache git make
 
@@ -17,11 +25,7 @@ COPY . .
 
 # Build binary
 # CGO_ENABLED=0 for static binary, no C dependencies
-# GOOS/GOARCH for multi-arch support (set via build args)
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
-ARG VERSION=dev
-ARG GIT_COMMIT=unknown
+# GOOS/GOARCH for multi-arch support (automatically set by buildx)
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags="-w -s -X main.Version=${VERSION} -X main.GitCommit=${GIT_COMMIT}" \
     -o /bridge \
@@ -32,12 +36,12 @@ FROM alpine:3.20
 
 # Install runtime dependencies
 # - ffmpeg: RTSP capture
-# - perl-image-exiftool: EXIF reading/writing (same tool as aviationwx.org server)
+# - exiftool: EXIF reading/writing (same tool as aviationwx.org server)
 # - ca-certificates: TLS for FTPS
 # - tzdata: timezone support
 RUN apk add --no-cache \
     ffmpeg \
-    perl-image-exiftool \
+    exiftool \
     ca-certificates \
     tzdata
 

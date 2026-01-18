@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Docker**: Fixed multi-arch builds not creating correct architecture binaries
+  - Removed default values from `TARGETOS` and `TARGETARCH` ARG declarations
+  - Docker buildx now properly injects platform-specific values during multi-arch builds
+  - Moved ARG declarations to immediately after FROM statement for proper scope
+  - Verified: arm64 binaries now correctly build as ARM64 (not x86-64)
+  - Added debug logging to show target platform during build
+- **Docker**: Fixed exiftool not being available in container
+  - Changed from `perl-image-exiftool` to `exiftool` package
+  - The `exiftool` package includes both the command-line tool and Perl libraries
+  - Verified on all platforms: linux/amd64, linux/arm64, linux/arm/v7
 - **Release**: Fixed artifact preparation in release workflow
   - Changed find command to use -mindepth 2 to handle artifact subdirectories
   - Reordered operations to remove directories before creating checksums
