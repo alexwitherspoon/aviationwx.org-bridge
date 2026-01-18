@@ -26,35 +26,38 @@ type Server struct {
 	mu         sync.RWMutex
 
 	// Callbacks for integration with orchestrator
-	onConfigChange func(*config.Config) error
-	getStatus      func() interface{}
-	testCamera     func(camConfig config.Camera) ([]byte, error)
-	testUpload     func(uploadConfig config.Upload) error
-	getCameraImage func(cameraID string) ([]byte, error)
+	onConfigChange  func(*config.Config) error
+	getStatus       func() interface{}
+	testCamera      func(camConfig config.Camera) ([]byte, error)
+	testUpload      func(uploadConfig config.Upload) error
+	getCameraImage  func(cameraID string) ([]byte, error)
+	getWorkerStatus func(cameraID string) map[string]interface{}
 }
 
 // ServerConfig configures the web server
 type ServerConfig struct {
-	Config         *config.Config
-	ConfigPath     string
-	OnConfigChange func(*config.Config) error
-	GetStatus      func() interface{}
-	TestCamera     func(camConfig config.Camera) ([]byte, error)
-	TestUpload     func(uploadConfig config.Upload) error
-	GetCameraImage func(cameraID string) ([]byte, error)
+	Config          *config.Config
+	ConfigPath      string
+	OnConfigChange  func(*config.Config) error
+	GetStatus       func() interface{}
+	TestCamera      func(camConfig config.Camera) ([]byte, error)
+	TestUpload      func(uploadConfig config.Upload) error
+	GetCameraImage  func(cameraID string) ([]byte, error)
+	GetWorkerStatus func(cameraID string) map[string]interface{}
 }
 
 // NewServer creates a new web server
 func NewServer(cfg ServerConfig) *Server {
 	s := &Server{
-		config:         cfg.Config,
-		configPath:     cfg.ConfigPath,
-		mux:            http.NewServeMux(),
-		onConfigChange: cfg.OnConfigChange,
-		getStatus:      cfg.GetStatus,
-		testCamera:     cfg.TestCamera,
-		testUpload:     cfg.TestUpload,
-		getCameraImage: cfg.GetCameraImage,
+		config:          cfg.Config,
+		configPath:      cfg.ConfigPath,
+		mux:             http.NewServeMux(),
+		onConfigChange:  cfg.OnConfigChange,
+		getStatus:       cfg.GetStatus,
+		testCamera:      cfg.TestCamera,
+		testUpload:      cfg.TestUpload,
+		getCameraImage:  cfg.GetCameraImage,
+		getWorkerStatus: cfg.GetWorkerStatus,
 	}
 
 	s.setupRoutes()
@@ -709,15 +712,24 @@ func (s *Server) cameraToMap(cam config.Camera) map[string]interface{} {
 		}
 	}
 
+	// Add worker runtime status
+	if s.getWorkerStatus != nil {
+		workerStatus := s.getWorkerStatus(cam.ID)
+		for k, v := range workerStatus {
+			m[k] = v
+		}
+	}
+
 	return m
 }
 
 func (s *Server) validateConfig(cfg *config.Config) error {
-	// Basic validation
+	// Basic validation - only fail on truly broken config
 	if cfg.Version == 0 {
 		cfg.Version = 2
 	}
 
+	// Check cameras but allow some to be invalid
 	for i, cam := range cfg.Cameras {
 		if cam.ID == "" {
 			return fmt.Errorf("camera %d: ID is required", i)
@@ -728,15 +740,16 @@ func (s *Server) validateConfig(cfg *config.Config) error {
 		if cam.Type != "http" && cam.Type != "rtsp" && cam.Type != "onvif" {
 			return fmt.Errorf("camera %s: invalid type %q", cam.ID, cam.Type)
 		}
+		
+		// Upload validation - only fail if upload block is missing entirely
 		if cam.Upload == nil {
 			return fmt.Errorf("camera %s: upload credentials required", cam.ID)
 		}
 		if cam.Upload.Username == "" {
 			return fmt.Errorf("camera %s: upload username required", cam.ID)
 		}
-		if cam.Upload.Password == "" {
-			return fmt.Errorf("camera %s: upload password required", cam.ID)
-		}
+		// Password validation is lenient - empty passwords will fail at runtime
+		// but won't block the web UI from loading
 	}
 
 	return nil
