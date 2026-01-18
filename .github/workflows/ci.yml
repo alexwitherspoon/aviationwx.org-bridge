@@ -74,7 +74,7 @@ jobs:
             "docker/docker-compose.yml"
             "README.md"
             "LICENSE"
-            "docs/CONFIG_SCHEMA_v2.md"
+            "docs/CONFIG_SCHEMA.md"
             "docs/LOCAL_TESTING.md"
           )
           for file in "${required_files[@]}"; do
