@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **CI/CD**: Docker images now only publish after all tests pass
+  - Merged `build.yml` into `ci.yml` with proper job dependencies
+  - Added `publish` job that depends on `test`, `build`, and `docker` jobs
+  - Prevents publishing broken images when tests fail on main branch
+  - Manual workflow dispatch still available for emergency rebuilds
 - **Install**: Changed install script to use `:edge` tag instead of `:latest`
   - The `:latest` tag is only created when a release is published
   - The `:edge` tag is created on every push to main branch
