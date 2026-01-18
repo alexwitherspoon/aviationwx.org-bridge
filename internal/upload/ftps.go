@@ -3,7 +3,9 @@ package upload
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -141,9 +143,17 @@ func (c *FTPSClient) connect() (*goftp.Client, error) {
 
 	// Load custom CA bundle if provided
 	if c.config.CABundlePath != "" {
-		// TODO: Load custom CA bundle
-		// This would require loading the CA bundle file and adding to tlsConfig.RootCAs
-		// For now, use system default CAs
+		caCert, err := os.ReadFile(c.config.CABundlePath)
+		if err != nil {
+			return nil, fmt.Errorf("read CA bundle: %w", err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			return nil, fmt.Errorf("failed to parse CA bundle")
+		}
+
+		tlsConfig.RootCAs = caCertPool
 	}
 
 	// Configure FTP client

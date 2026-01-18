@@ -230,20 +230,21 @@ func (b *Bridge) addCamera(camConfig config.Camera) error {
 		interval = 60 // Default 60 seconds
 	}
 
-	// Add to orchestrator
-	if err := b.orchestrator.AddCamera(cam, schedConfig, interval, b.updatePreviewCache); err != nil {
-		return fmt.Errorf("add to orchestrator: %w", err)
+	// Create uploader for this camera
+	var uploader upload.Client
+	if camConfig.Upload != nil {
+		var err error
+		uploader, err = b.createUploader(camConfig.Upload)
+		if err != nil {
+			return fmt.Errorf("create uploader: %w", err)
+		}
+	} else {
+		return fmt.Errorf("upload configuration required for camera %s", camConfig.ID)
 	}
 
-	// Create and set uploader for this camera
-	if camConfig.Upload != nil {
-		uploader, err := b.createUploader(camConfig.Upload)
-		if err != nil {
-			b.log.Warn("Failed to create uploader, uploads disabled",
-				"camera", camConfig.ID, "error", err)
-		} else {
-			b.orchestrator.SetUploader(uploader)
-		}
+	// Add to orchestrator with camera-specific uploader
+	if err := b.orchestrator.AddCamera(cam, schedConfig, interval, uploader, b.updatePreviewCache); err != nil {
+		return fmt.Errorf("add to orchestrator: %w", err)
 	}
 
 	b.log.Info("Camera added successfully",
@@ -299,24 +300,34 @@ func (b *Bridge) createUploader(uploadConfig *config.Upload) (upload.Client, err
 
 // handleConfigChange is called when config is updated via web UI
 func (b *Bridge) handleConfigChange(newCfg *config.Config) error {
-	// Save config to file
-	if err := saveConfig(b.configPath, newCfg); err != nil {
-		return fmt.Errorf("save config: %w", err)
-	}
-
-	// Build maps of old and new cameras
+	// Build maps of old and new cameras BEFORE updating b.config
 	oldCameras := make(map[string]config.Camera)
 	for _, cam := range b.config.Cameras {
 		oldCameras[cam.ID] = cam
 	}
-	
+
 	newCameras := make(map[string]config.Camera)
 	for _, cam := range newCfg.Cameras {
 		newCameras[cam.ID] = cam
 	}
 
-	// Find cameras to add (in new but not in old, or enabled when was disabled)
+	// Save config to file
+	if err := saveConfig(b.configPath, newCfg); err != nil {
+		return fmt.Errorf("save config: %w", err)
+	}
+
+	// Find cameras to delete
+	var camerasToDelete []string
+	for id := range oldCameras {
+		if _, exists := newCameras[id]; !exists {
+			camerasToDelete = append(camerasToDelete, id)
+		}
+	}
+
+	// Find cameras to add or update
 	var camerasToAdd []config.Camera
+	var camerasToUpdate []config.Camera
+
 	for id, newCam := range newCameras {
 		oldCam, existed := oldCameras[id]
 		if !existed {
@@ -324,9 +335,18 @@ func (b *Bridge) handleConfigChange(newCfg *config.Config) error {
 			if newCam.Enabled {
 				camerasToAdd = append(camerasToAdd, newCam)
 			}
-		} else if !oldCam.Enabled && newCam.Enabled {
-			// Camera was disabled, now enabled
-			camerasToAdd = append(camerasToAdd, newCam)
+		} else {
+			// Camera exists - check if it changed or was disabled/enabled
+			if oldCam.Enabled && !newCam.Enabled {
+				// Camera disabled - treat as deletion
+				camerasToDelete = append(camerasToDelete, id)
+			} else if !oldCam.Enabled && newCam.Enabled {
+				// Camera was disabled, now enabled - treat as addition
+				camerasToAdd = append(camerasToAdd, newCam)
+			} else if newCam.Enabled && cameraConfigChanged(oldCam, newCam) {
+				// Camera configuration changed - needs update
+				camerasToUpdate = append(camerasToUpdate, newCam)
+			}
 		}
 	}
 
@@ -343,14 +363,26 @@ func (b *Bridge) handleConfigChange(newCfg *config.Config) error {
 	// Update internal config reference
 	b.config = newCfg
 
-	// Update web server config
+	// Update web server config (it needs the updated reference too)
 	b.webServer.UpdateConfig(newCfg)
+
+	// Delete cameras from orchestrator
+	if b.orchestrator != nil && len(camerasToDelete) > 0 {
+		for _, cameraID := range camerasToDelete {
+			if err := b.orchestrator.RemoveCamera(cameraID); err != nil {
+				b.log.Error("Failed to remove camera during hot-reload",
+					"camera", cameraID, "error", err)
+			} else {
+				b.log.Info("Camera removed via hot-reload", "camera", cameraID)
+			}
+		}
+	}
 
 	// Add new cameras to orchestrator
 	if b.orchestrator != nil && len(camerasToAdd) > 0 {
 		for _, camConfig := range camerasToAdd {
 			if err := b.addCamera(camConfig); err != nil {
-				b.log.Error("Failed to add camera during hot-reload", 
+				b.log.Error("Failed to add camera during hot-reload",
 					"camera", camConfig.ID, "error", err)
 				// Continue with other cameras
 			} else {
@@ -363,10 +395,118 @@ func (b *Bridge) handleConfigChange(newCfg *config.Config) error {
 		}
 	}
 
-	// TODO: Handle camera deletion and updates (requires stopping workers)
-	b.log.Info("Config saved. Camera deletions and updates require restart.")
+	// Update existing cameras (remove and re-add)
+	if b.orchestrator != nil && len(camerasToUpdate) > 0 {
+		for _, camConfig := range camerasToUpdate {
+			b.log.Info("Updating camera configuration", "camera", camConfig.ID)
+
+			// Remove old camera
+			if err := b.orchestrator.RemoveCamera(camConfig.ID); err != nil {
+				b.log.Error("Failed to remove camera for update",
+					"camera", camConfig.ID, "error", err)
+				continue
+			}
+
+			// Add camera with new configuration
+			if err := b.addCamera(camConfig); err != nil {
+				b.log.Error("Failed to re-add updated camera",
+					"camera", camConfig.ID, "error", err)
+				continue
+			}
+
+			b.log.Info("Camera updated via hot-reload", "camera", camConfig.ID)
+		}
+
+		// Start updated workers
+		if err := b.orchestrator.Start(); err != nil {
+			b.log.Warn("Failed to start updated workers", "error", err)
+		}
+	}
+
+	b.log.Info("Config saved and applied",
+		"cameras_added", len(camerasToAdd),
+		"cameras_deleted", len(camerasToDelete),
+		"cameras_updated", len(camerasToUpdate))
 
 	return nil
+}
+
+// cameraConfigChanged checks if camera configuration changed in a way that requires restart
+func cameraConfigChanged(old, new config.Camera) bool {
+	// Check type change
+	if old.Type != new.Type {
+		return true
+	}
+
+	// Check auth changes
+	if (old.Auth == nil) != (new.Auth == nil) {
+		return true
+	}
+	if old.Auth != nil && new.Auth != nil {
+		if old.Auth.Username != new.Auth.Username || old.Auth.Password != new.Auth.Password {
+			return true
+		}
+	}
+
+	// Check capture settings
+	if old.SnapshotURL != new.SnapshotURL {
+		return true
+	}
+	if old.CaptureIntervalSeconds != new.CaptureIntervalSeconds {
+		return true
+	}
+
+	// Check RTSP settings
+	if (old.RTSP == nil) != (new.RTSP == nil) {
+		return true
+	}
+	if old.RTSP != nil && new.RTSP != nil {
+		if old.RTSP.URL != new.RTSP.URL {
+			return true
+		}
+	}
+
+	// Check ONVIF settings
+	if (old.ONVIF == nil) != (new.ONVIF == nil) {
+		return true
+	}
+	if old.ONVIF != nil && new.ONVIF != nil {
+		if old.ONVIF.Endpoint != new.ONVIF.Endpoint ||
+			old.ONVIF.Username != new.ONVIF.Username ||
+			old.ONVIF.Password != new.ONVIF.Password ||
+			old.ONVIF.ProfileToken != new.ONVIF.ProfileToken {
+			return true
+		}
+	}
+
+	// Check upload settings
+	if (old.Upload == nil) != (new.Upload == nil) {
+		return true
+	}
+	if old.Upload != nil && new.Upload != nil {
+		if old.Upload.Host != new.Upload.Host ||
+			old.Upload.Port != new.Upload.Port ||
+			old.Upload.Username != new.Upload.Username ||
+			old.Upload.Password != new.Upload.Password ||
+			old.Upload.TLS != new.Upload.TLS {
+			return true
+		}
+	}
+
+	// Check image processing settings
+	if (old.Image == nil) != (new.Image == nil) {
+		return true
+	}
+	if old.Image != nil && new.Image != nil {
+		if old.Image.MaxWidth != new.Image.MaxWidth ||
+			old.Image.MaxHeight != new.Image.MaxHeight ||
+			old.Image.Quality != new.Image.Quality {
+			return true
+		}
+	}
+
+	// No significant changes detected
+	return false
 }
 
 // getStatus returns the current system status

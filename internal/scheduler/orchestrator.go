@@ -125,7 +125,7 @@ func NewOrchestrator(config OrchestratorConfig) (*Orchestrator, error) {
 }
 
 // AddCamera adds a camera to the orchestrator
-func (o *Orchestrator) AddCamera(cam camera.Camera, config CameraConfig, intervalSecs int, onCapture func(cameraID string, imageData []byte, captureTime time.Time)) error {
+func (o *Orchestrator) AddCamera(cam camera.Camera, config CameraConfig, intervalSecs int, uploader upload.Client, onCapture func(cameraID string, imageData []byte, captureTime time.Time)) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -153,10 +153,19 @@ func (o *Orchestrator) AddCamera(cam camera.Camera, config CameraConfig, interva
 	worker := NewCaptureWorker(workerConfig)
 	o.captureWorkers[cameraID] = worker
 
-	// Add queue to upload worker if it exists
-	if o.uploadWorker != nil {
-		o.uploadWorker.AddQueue(cameraID, q, config)
+	// Create upload worker if it doesn't exist yet
+	if o.uploadWorker == nil {
+		uploadConfig := UploadWorkerConfig{
+			MinUploadInterval: o.config.MinUploadInterval,
+			AuthBackoff:       time.Duration(o.config.AuthBackoffSecs) * time.Second,
+			RetryDelay:        5 * time.Second,
+			Logger:            o.logger,
+		}
+		o.uploadWorker = NewUploadWorker(uploadConfig)
 	}
+
+	// Add queue with camera-specific uploader
+	o.uploadWorker.AddQueue(cameraID, q, config, uploader)
 
 	o.logger.Info("Camera added",
 		"camera", cameraID,
@@ -165,29 +174,30 @@ func (o *Orchestrator) AddCamera(cam camera.Camera, config CameraConfig, interva
 	return nil
 }
 
-// SetUploader sets the upload client and creates the upload worker
-func (o *Orchestrator) SetUploader(uploader upload.Client) {
+// RemoveCamera removes a camera from the orchestrator
+func (o *Orchestrator) RemoveCamera(cameraID string) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	uploadConfig := UploadWorkerConfig{
-		Uploader:          uploader,
-		MinUploadInterval: o.config.MinUploadInterval,
-		AuthBackoff:       time.Duration(o.config.AuthBackoffSecs) * time.Second,
-		RetryDelay:        5 * time.Second,
-		Logger:            o.logger,
+	// Stop and remove capture worker
+	if worker, ok := o.captureWorkers[cameraID]; ok {
+		worker.Stop()
+		delete(o.captureWorkers, cameraID)
+		o.logger.Info("Capture worker stopped", "camera", cameraID)
 	}
 
-	o.uploadWorker = NewUploadWorker(uploadConfig)
-
-	// Add all existing queues to upload worker
-	for cameraID, worker := range o.captureWorkers {
-		q, ok := o.queueManager.GetQueue(cameraID)
-		if ok {
-			config := worker.config
-			o.uploadWorker.AddQueue(cameraID, q, config)
-		}
+	// Remove queue from upload worker
+	if o.uploadWorker != nil {
+		o.uploadWorker.RemoveQueue(cameraID)
 	}
+
+	// Remove queue from queue manager
+	if err := o.queueManager.RemoveQueue(cameraID); err != nil {
+		return fmt.Errorf("remove queue: %w", err)
+	}
+
+	o.logger.Info("Camera removed", "camera", cameraID)
+	return nil
 }
 
 // SetTimeHealth sets the NTP time health checker
