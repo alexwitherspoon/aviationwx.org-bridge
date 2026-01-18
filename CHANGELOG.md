@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set ownership of `/data/aviationwx` to uid:gid 1000:1000 (matches container user)
   - Container runs as non-root user `bridge` but data directory was owned by root
   - Fixes "permission denied" error when saving camera configuration via web UI
+- **Config**: Create config directory if it doesn't exist
+  - Prevents "no such file or directory" error on first run
+  - Automatically creates `/data` directory with proper permissions
 - **Config**: Updated tests and config loader for new default port 2121
 
 ## [1.0.1] - 2026-01-18
