@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-18
+
+**Critical bugfix release** - v1.0.0 Docker images had incorrect architecture binaries
+
 ### Fixed
 - **Docker**: Fixed multi-arch builds not creating correct architecture binaries
   - Removed default values from `TARGETOS` and `TARGETARCH` ARG declarations
   - Docker buildx now properly injects platform-specific values during multi-arch builds
   - Moved ARG declarations to immediately after FROM statement for proper scope
   - Verified: arm64 binaries now correctly build as ARM64 (not x86-64)
-  - Added debug logging to show target platform during build
+  - **Impact**: v1.0.0 arm64/armv7 images contained x86-64 binaries causing "exec format error"
 - **Docker**: Fixed exiftool not being available in container
   - Changed from `perl-image-exiftool` to `exiftool` package
   - The `exiftool` package includes both the command-line tool and Perl libraries
@@ -21,15 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Release**: Fixed artifact preparation in release workflow
   - Changed find command to use -mindepth 2 to handle artifact subdirectories
   - Reordered operations to remove directories before creating checksums
-  - Added ls output for debugging
-
-### Changed
-- **Install**: Install script now uses `:latest` tag for stable releases
-  - Changed from `:edge` to `:latest` after v1.0.0 release
-  - Users get stable, tested releases by default
-  - `:edge` tag still available for testing development builds
 
 ## [1.0.0] - 2026-01-18
+
+⚠️ **Known Issue**: Multi-arch Docker images contain incorrect binaries (fixed in v1.0.1)
 
 First production release of AviationWX Bridge! 🎉
 
