@@ -114,6 +114,7 @@ docs/*ARCHITECTURE*.md
 # Keep public documentation (README, LOCAL_SETUP, DEPLOYMENT, API, etc.)
 !docs/README.md
 !docs/LOCAL_SETUP.md
+!docs/LOCAL_TESTING.md
 !docs/DEPLOYMENT.md
 !docs/API.md
 !docs/CONFIG_SCHEMA.md
