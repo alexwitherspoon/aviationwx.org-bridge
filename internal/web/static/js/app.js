@@ -544,6 +544,14 @@ function getCameraFormHtml(cam = null) {
                     <p class="form-help">Default server for aviationwx.org</p>
                 </div>
                 
+                <div class="form-group">
+                    <label for="uploadPort">Upload Server Port</label>
+                    <input type="number" id="uploadPort" class="form-control" 
+                           value="${cam?.upload?.port || 2121}"
+                           min="1" max="65535" required>
+                    <p class="form-help">FTPS port (default: 2121)</p>
+                </div>
+                
                 <button type="button" class="btn" onclick="testUpload()">Test Connection</button>
                 <div id="uploadTestResult"></div>
             </div>
@@ -609,7 +617,7 @@ async function saveCamera(event, existingId = null) {
         capture_interval_seconds: parseInt(document.getElementById('camInterval').value, 10),
         upload: {
             host: document.getElementById('uploadHost').value || 'upload.aviationwx.org',
-            port: 21,
+            port: parseInt(document.getElementById('uploadPort').value, 10) || 2121,
             username: document.getElementById('uploadUser').value,
             password: document.getElementById('uploadPass').value || undefined,
             tls: true,

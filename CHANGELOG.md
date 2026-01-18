@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Web UI**: Added upload server port configuration field
+  - Users can now specify custom FTPS port when adding/editing cameras
+  - Default changed from 21 to 2121 (standard FTPS port)
+  - Port field supports values 1-65535
+  - Existing configurations will use port 21 until manually updated
+
 ### Fixed
 - **Install**: Fixed permission denied error when saving config
   - Set ownership of `/data/aviationwx` to uid:gid 1000:1000 (matches container user)
