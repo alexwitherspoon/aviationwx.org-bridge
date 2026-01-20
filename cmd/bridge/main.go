@@ -159,7 +159,7 @@ func main() {
 	// On devices with < 1GB RAM, this will serialize image processing
 	resourceConfig := resource.DefaultConfig()
 	resourceLimiter := resource.NewLimiter(resourceConfig)
-	
+
 	log.Info("Resource limiter initialized",
 		"max_image_processing", resourceConfig.MaxConcurrentImageProcessing,
 		"max_exif_operations", resourceConfig.MaxConcurrentExifOperations,
