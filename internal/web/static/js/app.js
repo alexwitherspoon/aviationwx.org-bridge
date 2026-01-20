@@ -248,8 +248,10 @@ function updateCameraOverview() {
         return `
         <div class="camera-overview-item">
             <div class="camera-preview">
-                <img src="/api/cameras/${cam.id}/preview?t=${Date.now()}" 
+                <img src="/api/cameras/${cam.id}/preview" 
                      alt="${escapeHtml(cam.name)}"
+                     class="camera-preview-img"
+                     data-camera-id="${cam.id}"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                 <span style="display:none">No Preview</span>
             </div>
@@ -265,6 +267,9 @@ function updateCameraOverview() {
             </div>
         </div>
     `}).join('');
+    
+    // Start smooth image refresh for preview images
+    startSmoothImageRefresh();
 }
 
 function updateCameraList() {
@@ -394,8 +399,10 @@ function updateCameraList() {
             </div>
             <div class="camera-card-body">
                 <div class="camera-card-preview">
-                    <img src="/api/cameras/${cam.id}/preview?t=${Date.now()}" 
+                    <img src="/api/cameras/${cam.id}/preview" 
                          alt="${escapeHtml(cam.name)}"
+                         class="camera-preview-img"
+                         data-camera-id="${cam.id}"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                     <span style="display:none">Preview not available</span>
                 </div>
@@ -1133,6 +1140,62 @@ document.addEventListener('keydown', (e) => {
 setInterval(async () => {
     await refreshStatus();
 }, 30000);
+
+// Smooth image refresh system
+let imageRefreshIntervals = new Map();
+
+function startSmoothImageRefresh() {
+    // Clear any existing intervals
+    imageRefreshIntervals.forEach(interval => clearInterval(interval));
+    imageRefreshIntervals.clear();
+    
+    // Find all camera preview images
+    const previewImages = document.querySelectorAll('.camera-preview-img');
+    
+    previewImages.forEach(img => {
+        const cameraId = img.dataset.cameraId;
+        if (!cameraId) return;
+        
+        // Create smooth refresh for this camera
+        // Refresh every 5 seconds (adjust based on your needs)
+        const intervalId = setInterval(() => {
+            smoothRefreshImage(img, cameraId);
+        }, 5000);
+        
+        imageRefreshIntervals.set(cameraId, intervalId);
+    });
+}
+
+function smoothRefreshImage(img, cameraId) {
+    // Create a new image in the background
+    const newImg = new Image();
+    const refreshUrl = `/api/cameras/${cameraId}/preview?t=${Date.now()}`;
+    
+    newImg.onload = function() {
+        // Fade out current image
+        img.style.transition = 'opacity 0.3s ease-in-out';
+        img.style.opacity = '0';
+        
+        // After fade out, swap the src and fade in
+        setTimeout(() => {
+            img.src = refreshUrl;
+            img.style.opacity = '1';
+        }, 300);
+    };
+    
+    newImg.onerror = function() {
+        // If new image fails to load, don't update
+        console.log(`Failed to load preview for ${cameraId}`);
+    };
+    
+    // Start loading the new image
+    newImg.src = refreshUrl;
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    imageRefreshIntervals.forEach(interval => clearInterval(interval));
+});
 
 
 
