@@ -181,14 +181,74 @@ func (c *Checker) checkNow() error {
 
 // isNewerVersion checks if the release tag is newer than current version
 func (c *Checker) isNewerVersion(tagName string) bool {
-	// If current is "dev" or "unknown", any version is newer
+	// If current is "dev" or "unknown", don't show updates
+	// (dev/edge builds should be managed manually)
 	if c.currentVersion == "dev" || c.currentVersion == "" {
-		return tagName != ""
+		return false
 	}
 
-	// Simple string comparison - assumes semver tags like v1.0.0
+	// Strip 'v' prefix from both versions for comparison
+	currentVer := c.currentVersion
+	if len(currentVer) > 0 && currentVer[0] == 'v' {
+		currentVer = currentVer[1:]
+	}
+	
+	latestVer := tagName
+	if len(latestVer) > 0 && latestVer[0] == 'v' {
+		latestVer = latestVer[1:]
+	}
+
+	// If versions are identical, no update needed
+	if currentVer == latestVer {
+		return false
+	}
+
+	// Simple semantic version comparison (major.minor.patch)
 	// For proper semver comparison, consider github.com/Masterminds/semver
-	return tagName != c.currentVersion && tagName > c.currentVersion
+	return compareVersions(latestVer, currentVer) > 0
+}
+
+// compareVersions compares two semantic version strings
+// Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+func compareVersions(v1, v2 string) int {
+	// Split versions into components
+	parts1 := parseVersion(v1)
+	parts2 := parseVersion(v2)
+
+	// Compare each component
+	for i := 0; i < 3; i++ {
+		if parts1[i] > parts2[i] {
+			return 1
+		}
+		if parts1[i] < parts2[i] {
+			return -1
+		}
+	}
+
+	return 0 // Equal
+}
+
+// parseVersion parses a version string like "2.0.3" into [2, 0, 3]
+func parseVersion(v string) [3]int {
+	var parts [3]int
+	var current int
+	var idx int
+
+	for i := 0; i < len(v) && idx < 3; i++ {
+		if v[i] >= '0' && v[i] <= '9' {
+			current = current*10 + int(v[i]-'0')
+		} else if v[i] == '.' {
+			parts[idx] = current
+			current = 0
+			idx++
+		}
+	}
+	
+	if idx < 3 {
+		parts[idx] = current
+	}
+
+	return parts
 }
 
 func (c *Checker) setError(err error) {

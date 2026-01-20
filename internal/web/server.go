@@ -617,10 +617,12 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	s.log.Info("Update triggered via web UI")
 
-	// Trigger update by touching a file that the supervisor script watches
+	// Trigger update by creating a force-update trigger file
+	// The supervisor script checks for this on boot-update runs
 	updateTriggerFile := "/data/aviationwx/trigger-update"
 
-	if err := os.WriteFile(updateTriggerFile, []byte("manual-trigger"), 0644); err != nil {
+	// Write "force" to indicate we want to skip age checks
+	if err := os.WriteFile(updateTriggerFile, []byte("force"), 0644); err != nil {
 		s.log.Error("Failed to create update trigger file", "error", err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
