@@ -44,10 +44,10 @@ func TestChecker_isNewerVersion(t *testing.T) {
 		expected       bool
 	}{
 		{
-			name:           "dev version - any release is newer",
+			name:           "dev version - no update notification",
 			currentVersion: "dev",
 			tagName:        "v1.0.0",
-			expected:       true,
+			expected:       false, // dev/edge builds don't show update notifications
 		},
 		{
 			name:           "same version",
@@ -71,6 +71,30 @@ func TestChecker_isNewerVersion(t *testing.T) {
 			name:           "empty current version",
 			currentVersion: "",
 			tagName:        "v1.0.0",
+			expected:       false, // Empty/unknown versions don't show updates
+		},
+		{
+			name:           "newer patch version",
+			currentVersion: "v2.0.2",
+			tagName:        "v2.0.3",
+			expected:       true,
+		},
+		{
+			name:           "newer minor version",
+			currentVersion: "v2.0.3",
+			tagName:        "v2.1.0",
+			expected:       true,
+		},
+		{
+			name:           "newer major version",
+			currentVersion: "v1.9.9",
+			tagName:        "v2.0.0",
+			expected:       true,
+		},
+		{
+			name:           "version without v prefix",
+			currentVersion: "2.0.3",
+			tagName:        "v2.0.4",
 			expected:       true,
 		},
 	}

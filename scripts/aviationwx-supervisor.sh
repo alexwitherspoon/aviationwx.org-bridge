@@ -703,9 +703,16 @@ main() {
     # Check for manual update trigger from web UI
     if [ -f "${DATA_DIR}/trigger-update" ]; then
         log_event "INFO" "Manual update triggered via web UI"
+        
+        # Check if it's a force update request
+        trigger_content=$(cat "${DATA_DIR}/trigger-update" 2>/dev/null || echo "")
+        if [ "$trigger_content" = "force" ]; then
+            log_event "INFO" "Force update requested - skipping age check"
+            export AVIATIONWX_SKIP_AGE_CHECK=true
+        fi
+        
         rm -f "${DATA_DIR}/trigger-update"
         rm -f "${DATA_DIR}/release-cache.json" # Force fresh check
-        unset BOOT_MODE
         boot_update
         exit 0
     fi
