@@ -273,7 +273,8 @@ determine_target_version() {
             fi
         fi
         
-        echo "$tag_name"
+        # Return version WITHOUT 'v' prefix (Docker images use 2.0.1, not v2.0.1)
+        echo "${tag_name#v}"
     fi
 }
 
