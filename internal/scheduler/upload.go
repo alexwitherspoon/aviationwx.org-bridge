@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -207,6 +208,24 @@ type UploadStats struct {
 }
 
 func (w *UploadWorker) run() {
+	// Panic recovery: if this goroutine panics, log and restart after delay
+	defer func() {
+		if r := recover(); r != nil {
+			w.logger.Error("Upload worker panicked, will restart",
+				"panic", r,
+				"stack", string(debug.Stack()))
+
+			// Wait before restarting to avoid tight panic loop
+			time.Sleep(10 * time.Second)
+
+			// Only restart if context is still active (not explicitly stopped)
+			if w.ctx.Err() == nil {
+				w.logger.Info("Restarting upload worker after panic")
+				go w.run()
+			}
+		}
+	}()
+
 	w.logger.Info("Upload worker started")
 
 	// Round-robin index

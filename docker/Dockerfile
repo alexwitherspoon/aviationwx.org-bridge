@@ -68,7 +68,12 @@ USER bridge
 EXPOSE 1229
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+# - interval: Check every 30 seconds
+# - timeout: Health check must complete within 5 seconds
+# - start-period: Grace period for app startup (30 seconds)
+# - retries: Mark unhealthy after 3 consecutive failures (90 seconds total)
+# Triggers: Container marked unhealthy → systemd can restart if configured
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:1229/healthz || exit 1
 
 # Environment variables for configuration
