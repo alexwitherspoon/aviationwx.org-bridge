@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"os"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -137,6 +138,26 @@ type CaptureStats struct {
 }
 
 func (w *CaptureWorker) run() {
+	// Panic recovery: if this goroutine panics, log and restart after delay
+	defer func() {
+		if r := recover(); r != nil {
+			w.logger.Error("Capture worker panicked, will restart",
+				"camera", w.camera.ID(),
+				"panic", r,
+				"stack", string(debug.Stack()))
+
+			// Wait before restarting to avoid tight panic loop
+			time.Sleep(10 * time.Second)
+
+			// Only restart if context is still active (not explicitly stopped)
+			if w.ctx.Err() == nil {
+				w.logger.Info("Restarting capture worker after panic",
+					"camera", w.camera.ID())
+				go w.run()
+			}
+		}
+	}()
+
 	ticker := time.NewTicker(w.interval)
 	defer ticker.Stop()
 
