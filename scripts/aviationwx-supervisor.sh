@@ -715,9 +715,9 @@ main() {
             boot_update
             ;;
         force-update)
-            # Clear cache and boot mode to force immediate update
+            # Clear cache and skip age check to force immediate update
             rm -f "${DATA_DIR}/release-cache.json"
-            unset BOOT_MODE
+            export AVIATIONWX_SKIP_AGE_CHECK=true
             boot_update
             ;;
         status)
