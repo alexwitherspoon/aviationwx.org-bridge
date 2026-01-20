@@ -288,6 +288,7 @@ func TestQueue_CapturePause(t *testing.T) {
 	config.MaxFiles = 10
 	config.ThresholdCritical = 0.9
 	config.PauseCaptureOnCritical = true
+	config.ThinningEnabled = false // Disable thinning for deterministic test
 
 	q, err := NewQueue("test-camera", dir, config, nil)
 	if err != nil {
@@ -304,13 +305,13 @@ func TestQueue_CapturePause(t *testing.T) {
 		}
 	}
 
-	// Verify we're at critical level
+	// Verify we're at critical level (9 images = 90%)
 	stats := q.GetStats()
-	if stats.ImageCount < 7 {
-		t.Fatalf("expected at least 7 images, got %d", stats.ImageCount)
+	if stats.ImageCount != 9 {
+		t.Fatalf("expected 9 images, got %d", stats.ImageCount)
 	}
-	if stats.CapacityPercent < 70.0 {
-		t.Fatalf("expected capacity >= 70%%, got %.1f%%", stats.CapacityPercent)
+	if stats.CapacityPercent < 90.0 {
+		t.Fatalf("expected capacity >= 90%%, got %.1f%%", stats.CapacityPercent)
 	}
 
 	// Should be paused at critical level
