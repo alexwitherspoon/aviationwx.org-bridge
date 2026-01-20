@@ -127,9 +127,11 @@ EOF
             log_info "Journald already configured"
         fi
         
-        # Configure Docker to use journald
+        # Configure Docker to use journald (merge with existing config)
+        mkdir -p /etc/docker
+        
         if [[ ! -f /etc/docker/daemon.json ]]; then
-            mkdir -p /etc/docker
+            # Create new config
             cat > /etc/docker/daemon.json << 'EOF'
 {
   "log-driver": "journald",
@@ -138,12 +140,44 @@ EOF
   }
 }
 EOF
-            systemctl restart docker
-            log_success "Configured Docker to use journald logging"
+            log_success "Created Docker daemon.json with journald logging"
         else
-            log_warn "Docker daemon.json exists - not overwriting"
-            log_info "To enable journald logging, add to /etc/docker/daemon.json:"
-            log_info '  {"log-driver": "journald", "log-opts": {"tag": "{{.Name}}"}}'
+            # Merge with existing config using jq
+            log_info "Merging journald config into existing daemon.json"
+            
+            # Backup existing config
+            cp /etc/docker/daemon.json /etc/docker/daemon.json.backup
+            
+            # Merge configs
+            jq '. + {"log-driver": "journald", "log-opts": {"tag": "{{.Name}}"}}' \
+                /etc/docker/daemon.json > /etc/docker/daemon.json.tmp
+            
+            # Validate JSON
+            if jq empty /etc/docker/daemon.json.tmp 2>/dev/null; then
+                mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+                log_success "Merged journald config into daemon.json (backup saved)"
+            else
+                log_error "Failed to merge config - keeping original"
+                rm -f /etc/docker/daemon.json.tmp
+                return 1
+            fi
+        fi
+        
+        # Restart Docker to apply changes
+        log_info "Restarting Docker to apply logging configuration..."
+        systemctl restart docker
+        sleep 2
+        
+        # Verify Docker is running
+        if systemctl is-active --quiet docker; then
+            log_success "Docker restarted successfully with journald logging"
+        else
+            log_error "Docker failed to restart - restoring backup"
+            if [[ -f /etc/docker/daemon.json.backup ]]; then
+                mv /etc/docker/daemon.json.backup /etc/docker/daemon.json
+                systemctl restart docker
+            fi
+            return 1
         fi
     else
         log_info "Not a Raspberry Pi - using default Docker logging"
