@@ -178,6 +178,7 @@ func TestQueue_HealthLevel(t *testing.T) {
 	config.ThresholdDegraded = 0.8
 	config.ThresholdCritical = 0.9
 	config.PauseCaptureOnCritical = false // Don't pause for this test
+	config.ThinningEnabled = false        // Disable thinning for deterministic tests
 
 	q, err := NewQueue("test-camera", dir, config, nil)
 	if err != nil {
