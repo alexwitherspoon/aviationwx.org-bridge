@@ -75,11 +75,12 @@ type Upload struct {
 	CABundlePath          string `json:"ca_bundle_path,omitempty"`
 	TimeoutConnectSeconds int    `json:"timeout_connect_seconds,omitempty"` // Default: 30
 	TimeoutUploadSeconds  int    `json:"timeout_upload_seconds,omitempty"`  // Default: 60
-	DisableEPSV           bool   `json:"disable_epsv,omitempty"`            // Default: false (use standard PASV if true)
+	DisableEPSV           *bool  `json:"disable_epsv,omitempty"`            // Default: true (use standard PASV, set false to enable EPSV)
 }
 
 // DefaultUpload returns default upload settings
 func DefaultUpload() Upload {
+	disableEPSV := true // Default to PASV mode (proven reliable)
 	return Upload{
 		Host:                  "upload.aviationwx.org",
 		Port:                  2121,
@@ -87,6 +88,7 @@ func DefaultUpload() Upload {
 		TLSVerify:             true,
 		TimeoutConnectSeconds: 30,
 		TimeoutUploadSeconds:  60,
+		DisableEPSV:           &disableEPSV, // Use standard PASV by default
 	}
 }
 
