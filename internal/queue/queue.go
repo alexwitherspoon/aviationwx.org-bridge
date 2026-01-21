@@ -797,8 +797,14 @@ func (q *Queue) updateHealthLevelLocked() {
 }
 
 func (q *Queue) getCapacityPercentLocked() float64 {
-	countPct := float64(q.state.ImageCount) / float64(q.config.MaxFiles)
-	sizePct := float64(q.state.TotalSizeBytes) / float64(q.config.MaxSizeMB*1024*1024)
+	// Protect against division by zero
+	var countPct, sizePct float64
+	if q.config.MaxFiles > 0 {
+		countPct = float64(q.state.ImageCount) / float64(q.config.MaxFiles)
+	}
+	if q.config.MaxSizeMB > 0 {
+		sizePct = float64(q.state.TotalSizeBytes) / float64(q.config.MaxSizeMB*1024*1024)
+	}
 
 	if countPct > sizePct {
 		return countPct

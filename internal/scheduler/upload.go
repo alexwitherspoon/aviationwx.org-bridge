@@ -401,6 +401,11 @@ func (w *UploadWorker) scheduleUploads(workChan chan<- uploadTask) {
 		failState := w.cameraFailures[cameraID]
 		w.mu.RUnlock()
 
+		// Skip if camera was removed (nil check for safety)
+		if q == nil || failState == nil {
+			continue
+		}
+
 		// Skip if camera is in backoff
 		if time.Now().Before(failState.backoffUntil) {
 			continue

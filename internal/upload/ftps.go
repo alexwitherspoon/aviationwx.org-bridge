@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -80,7 +80,8 @@ func (c *FTPSClient) Upload(remotePath string, data []byte) error {
 	}()
 
 	// Ensure directory exists
-	dir := filepath.Dir(remotePath)
+	// Use path.Dir (not filepath.Dir) because FTP always uses forward slashes
+	dir := path.Dir(remotePath)
 	if dir != "." && dir != "" {
 		if err := c.ensureDirectoryWithConn(conn, dir); err != nil {
 			return &UploadError{

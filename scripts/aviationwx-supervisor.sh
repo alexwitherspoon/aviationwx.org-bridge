@@ -333,13 +333,14 @@ pull_image_with_retry() {
         log_event "INFO" "Pulling image (attempt $attempt/$max_attempts): ${image}:${version}"
         log_event "INFO" "Timeout: ${PULL_TIMEOUT}s (may take several minutes on slow connections)"
         
-        if timeout $PULL_TIMEOUT docker pull "${image}:${version}" 2>&1; then
+        # Capture exit code properly (don't use if directly)
+        local exit_code=0
+        timeout $PULL_TIMEOUT docker pull "${image}:${version}" || exit_code=$?
+        
+        if [ $exit_code -eq 0 ]; then
             log_event "SUCCESS" "Image pulled successfully"
             return 0
-        fi
-        
-        local exit_code=$?
-        if [ $exit_code -eq 124 ]; then
+        elif [ $exit_code -eq 124 ]; then
             log_event "WARN" "Pull timed out after ${PULL_TIMEOUT}s"
         else
             log_event "WARN" "Pull failed with exit code $exit_code"
@@ -366,15 +367,16 @@ check_release_workflow_status() {
     local version="$1"
     
     # Only check for version tags (not 'edge' or 'latest')
-    if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    # Version comes WITHOUT 'v' prefix (e.g., "2.2.3"), so check for semver pattern
+    if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         return 1
     fi
     
     # Try to check GitHub Actions status (requires gh CLI or API)
-    # Fallback: check if release exists
+    # Fallback: check if release exists (API uses v-prefixed tags)
     local release_exists
     release_exists=$(curl -sf --max-time 5 \
-        "https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${version}" 2>/dev/null)
+        "https://api.github.com/repos/${GITHUB_REPO}/releases/tags/v${version}" 2>/dev/null)
     
     if [ -n "$release_exists" ]; then
         # Release exists, check if it's recent (within last 15 minutes)
@@ -390,7 +392,7 @@ check_release_workflow_status() {
             
             # If release was published in last 15 minutes, build might still be in progress
             if [ $age_seconds -lt 900 ]; then
-                log_event "INFO" "Release $version published ${age_seconds}s ago, Docker build may be in progress" >&2
+                log_event "INFO" "Release v${version} published ${age_seconds}s ago, Docker build may be in progress" >&2
                 return 0
             fi
         fi
@@ -583,12 +585,17 @@ rollback_to_last_known_good() {
     docker stop "$CONTAINER_NAME" 2>/dev/null || true
     docker rm "$CONTAINER_NAME" 2>/dev/null || true
     
-    # Pull last known good (might be in cache)
-    docker pull "${IMAGE_NAME}:${last_good}" 2>&1 | head -5
+    # Pull last known good with retry (might be in cache, but network could be flaky)
+    if ! pull_image_with_retry "$IMAGE_NAME" "$last_good" 3 15; then
+        log_event "ERROR" "Failed to pull rollback image, trying to start from cache"
+    fi
     
-    start_container "$last_good"
-    
-    log_event "INFO" "Rollback complete"
+    if start_container "$last_good"; then
+        log_event "INFO" "Rollback complete"
+    else
+        log_event "ERROR" "Rollback failed - container did not start"
+        return 1
+    fi
 }
 
 check_resources_available() {

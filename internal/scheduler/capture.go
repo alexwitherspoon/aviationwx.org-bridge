@@ -406,9 +406,14 @@ func (w *CaptureWorker) readCameraEXIF(imageData []byte) *time.Time {
 		return nil
 	}
 	tmpPath := tmpFile.Name()
-	_, _ = tmpFile.Write(imageData)
-	tmpFile.Close()
 	defer os.Remove(tmpPath)
+
+	// Write image data and close file (must close before exiftool reads)
+	_, writeErr := tmpFile.Write(imageData)
+	closeErr := tmpFile.Close()
+	if writeErr != nil || closeErr != nil {
+		return nil // Can't proceed with incomplete/corrupt temp file
+	}
 
 	result, err := w.exifHelper.ReadEXIF(tmpPath)
 	if err != nil || !result.Success {
