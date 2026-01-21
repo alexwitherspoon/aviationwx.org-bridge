@@ -752,20 +752,29 @@ function getCameraFormHtml(cam = null) {
             <div class="form-section">
                 <div class="form-section-title">Upload Credentials</div>
                 <p class="form-help" style="margin-bottom: var(--space-md)">
-                    Contact <a href="mailto:contact@aviationwx.org">contact@aviationwx.org</a> to get FTP credentials for your camera.
+                    Contact <a href="mailto:contact@aviationwx.org">contact@aviationwx.org</a> to get upload credentials for your camera.
                 </p>
+                
+                <div class="form-group">
+                    <label for="uploadProtocol">Upload Protocol</label>
+                    <select id="uploadProtocol" class="form-control" onchange="updateProtocolSettings()">
+                        <option value="sftp" ${(cam?.upload?.protocol || 'sftp') === 'sftp' ? 'selected' : ''}>SFTP (Recommended)</option>
+                        <option value="ftps" ${cam?.upload?.protocol === 'ftps' ? 'selected' : ''}>FTPS (Legacy)</option>
+                    </select>
+                    <p class="form-help">SFTP is more reliable on slow/unreliable connections</p>
+                </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="uploadUser">FTP Username</label>
+                        <label for="uploadUser">Username</label>
                         <input type="text" id="uploadUser" class="form-control" 
                                value="${cam?.upload?.username || ''}"
-                               required placeholder="your-ftp-username">
+                               required placeholder="your-username">
                     </div>
                     <div class="form-group">
-                        <label for="uploadPass">FTP Password</label>
+                        <label for="uploadPass">Password</label>
                         <input type="password" id="uploadPass" class="form-control" 
-                               ${isEdit ? 'placeholder="••••••••"' : 'required placeholder="your-ftp-password"'}>
+                               ${isEdit ? 'placeholder="••••••••"' : 'required placeholder="your-password"'}>
                     </div>
                 </div>
                 
@@ -780,9 +789,9 @@ function getCameraFormHtml(cam = null) {
                 <div class="form-group">
                     <label for="uploadPort">Upload Server Port</label>
                     <input type="number" id="uploadPort" class="form-control" 
-                           value="${cam?.upload?.port || 2121}"
+                           value="${cam?.upload?.port || ((cam?.upload?.protocol || 'sftp') === 'sftp' ? 2222 : 2121)}"
                            min="1" max="65535" required>
-                    <p class="form-help">FTPS port (default: 2121)</p>
+                    <p class="form-help" id="uploadPortHelp">SFTP port (default: 2222)</p>
                 </div>
                 
                 <button type="button" class="btn" onclick="testUpload()">Test Connection</button>
@@ -810,6 +819,25 @@ function updateCameraTypeFields() {
     document.getElementById('rtspFields').style.display = type === 'rtsp' ? 'block' : 'none';
     document.getElementById('onvifFields').style.display = type === 'onvif' ? 'block' : 'none';
 }
+
+function updateProtocolSettings() {
+    const protocol = document.getElementById('uploadProtocol').value;
+    const portInput = document.getElementById('uploadPort');
+    const portHelp = document.getElementById('uploadPortHelp');
+    
+    if (protocol === 'sftp') {
+        if (portInput.value == '21' || portInput.value == '2121') {
+            portInput.value = '2222';
+        }
+        portHelp.textContent = 'SFTP port (default: 2222)';
+    } else {
+        if (portInput.value == '22' || portInput.value == '2222') {
+            portInput.value = '2121';
+        }
+        portHelp.textContent = 'FTPS port (default: 2121)';
+    }
+}
+
 
 function updateImagePreset() {
     const preset = document.getElementById('imagePreset').value;
@@ -843,6 +871,7 @@ async function saveCamera(event, existingId = null) {
     event.preventDefault();
     
     const type = document.getElementById('camType').value;
+    const protocol = document.getElementById('uploadProtocol')?.value || 'sftp';
     const camera = {
         id: document.getElementById('camId').value.toLowerCase().replace(/\s+/g, '-'),
         name: document.getElementById('camName').value || document.getElementById('camId').value,
@@ -850,8 +879,9 @@ async function saveCamera(event, existingId = null) {
         enabled: document.getElementById('camEnabled').checked,
         capture_interval_seconds: parseInt(document.getElementById('camInterval').value, 10),
         upload: {
+            protocol: protocol,
             host: document.getElementById('uploadHost').value || 'upload.aviationwx.org',
-            port: parseInt(document.getElementById('uploadPort').value, 10) || 2121,
+            port: parseInt(document.getElementById('uploadPort').value, 10) || (protocol === 'sftp' ? 2222 : 2121),
             username: document.getElementById('uploadUser').value,
             password: document.getElementById('uploadPass').value || undefined,
             tls: true,
@@ -934,12 +964,16 @@ async function testUpload() {
     const resultDiv = document.getElementById('uploadTestResult');
     resultDiv.innerHTML = '<div class="test-result" style="background: var(--color-bg)">Testing connection...</div>';
     
+    const protocol = document.getElementById('uploadProtocol')?.value || 'sftp';
+    const port = parseInt(document.getElementById('uploadPort').value) || (protocol === 'sftp' ? 2222 : 2121);
+    
     try {
         const result = await api('/test/upload', {
             method: 'POST',
             body: JSON.stringify({
+                protocol: protocol,
                 host: document.getElementById('uploadHost').value || 'upload.aviationwx.org',
-                port: parseInt(document.getElementById('uploadPort').value) || 2121,
+                port: port,
                 username: document.getElementById('uploadUser').value,
                 password: document.getElementById('uploadPass').value,
                 tls: true,
@@ -947,7 +981,7 @@ async function testUpload() {
         });
         
         if (result.status === 'ok') {
-            resultDiv.innerHTML = '<div class="test-result success">✓ Connection successful!</div>';
+            resultDiv.innerHTML = `<div class="test-result success">✓ ${protocol.toUpperCase()} connection successful!</div>`;
         } else {
             resultDiv.innerHTML = `<div class="test-result error">✗ ${result.error || 'Connection failed'}</div>`;
         }

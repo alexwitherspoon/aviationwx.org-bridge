@@ -346,8 +346,9 @@ func (w *CaptureWorker) capture() {
 		}
 	}
 
-	// Stamp EXIF with bridge marker
-	stampResult := timepkg.StampBridgeEXIF(imageData, observation)
+	// Stamp EXIF with bridge marker using exiftool
+	// Must use exiftool (not manual injection) for server compatibility
+	stampResult := timepkg.StampBridgeEXIFWithTool(imageData, observation)
 	if !stampResult.Stamped {
 		w.mu.Lock()
 		w.exifWriteFailed++
