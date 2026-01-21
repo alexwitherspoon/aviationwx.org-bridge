@@ -451,9 +451,41 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, 
 	w.lastConnectionTime = time.Now()
 	w.connectionMutex.Unlock()
 
-	// Maximum upload time: 120 seconds (generous for slow connections)
-	maxUploadTime := 120 * time.Second
+	// Read image data first to determine size
+	imageData, err := readImageFile(img.FilePath)
+	if err != nil {
+		w.logger.Error("Failed to read image file",
+			"camera", cameraID,
+			"path", img.FilePath,
+			"error", err)
+		w.recordFailure(cameraID, err)
+		return false
+	}
+
+	// Calculate timeout based on file size and concurrent uploads
+	// Assume minimum 5 KB/s per upload when bandwidth is shared (conservative for 3 concurrent)
+	// Add 90s overhead for connection establishment, retries, and network variability
+	minBytesPerSecond := 5 * 1024 // 5 KB/s (conservative for shared bandwidth)
+	baseTimeout := 90 * time.Second
+	sizeBasedTimeout := time.Duration(len(imageData)/minBytesPerSecond) * time.Second
+	maxUploadTime := baseTimeout + sizeBasedTimeout
+	
+	// Cap at reasonable maximum (15 minutes for very large files)
+	if maxUploadTime > 15*time.Minute {
+		maxUploadTime = 15 * time.Minute
+	}
+	
+	// Ensure minimum timeout of 3 minutes (generous for slow/shared connections)
+	if maxUploadTime < 3*time.Minute {
+		maxUploadTime = 3 * time.Minute
+	}
+	
 	uploadDeadline := time.After(maxUploadTime)
+
+	w.logger.Debug("Upload timeout calculated",
+		"camera", cameraID,
+		"file_size_kb", len(imageData)/1024,
+		"timeout", maxUploadTime)
 
 	// Channel for upload result
 	type uploadResult struct {
@@ -464,19 +496,8 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, 
 
 	// Run upload in goroutine with timeout protection
 	go func() {
-		// Read image data from file
-		imageData, err := readImageFile(img.FilePath)
-		if err != nil {
-			w.logger.Error("Failed to read image file",
-				"camera", cameraID,
-				"path", img.FilePath,
-				"error", err)
-			resultCh <- uploadResult{false, err}
-			return
-		}
-
 		// First attempt
-		err = uploader.Upload(remotePath, imageData)
+		err := uploader.Upload(remotePath, imageData)
 		if err == nil {
 			w.logger.Debug("Upload successful",
 				"camera", cameraID,
@@ -536,6 +557,7 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, 
 	case <-uploadDeadline:
 		w.logger.Error("Upload exceeded maximum time",
 			"camera", cameraID,
+			"file_size_kb", len(imageData)/1024,
 			"max_time", maxUploadTime)
 		w.recordFailure(cameraID, fmt.Errorf("upload timeout after %v", maxUploadTime))
 		return false
