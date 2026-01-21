@@ -469,17 +469,17 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, 
 	baseTimeout := 90 * time.Second
 	sizeBasedTimeout := time.Duration(len(imageData)/minBytesPerSecond) * time.Second
 	maxUploadTime := baseTimeout + sizeBasedTimeout
-	
+
 	// Cap at reasonable maximum (15 minutes for very large files)
 	if maxUploadTime > 15*time.Minute {
 		maxUploadTime = 15 * time.Minute
 	}
-	
+
 	// Ensure minimum timeout of 3 minutes (generous for slow/shared connections)
 	if maxUploadTime < 3*time.Minute {
 		maxUploadTime = 3 * time.Minute
 	}
-	
+
 	uploadDeadline := time.After(maxUploadTime)
 
 	w.logger.Debug("Upload timeout calculated",

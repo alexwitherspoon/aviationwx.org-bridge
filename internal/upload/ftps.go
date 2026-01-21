@@ -311,10 +311,10 @@ func isAuthError(err error) bool {
 
 // progressReader wraps an io.Reader and tracks bytes transferred
 type progressReader struct {
-	reader        io.Reader
-	bytesRead     *atomic.Int64
-	lastProgress  *atomic.Int64
-	totalSize     int64
+	reader       io.Reader
+	bytesRead    *atomic.Int64
+	lastProgress *atomic.Int64
+	totalSize    int64
 }
 
 func newProgressReader(reader io.Reader, totalSize int64) *progressReader {
@@ -339,11 +339,11 @@ func (pr *progressReader) Read(p []byte) (n int, err error) {
 func (pr *progressReader) GetProgress() (bytesRead int64, percent float64, lastActivity time.Time) {
 	bytes := pr.bytesRead.Load()
 	lastNano := pr.lastProgress.Load()
-	
+
 	var pct float64
 	if pr.totalSize > 0 {
 		pct = float64(bytes) / float64(pr.totalSize) * 100
 	}
-	
+
 	return bytes, pct, time.Unix(0, lastNano)
 }
