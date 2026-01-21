@@ -417,8 +417,14 @@ func (b *Bridge) addCamera(camConfig config.Camera) error {
 		imgProcessor = image.NewProcessor(nil)
 	}
 
+	// Use remote_path from config, default to camera ID for backwards compatibility
+	remotePath := camConfig.RemotePath
+	if remotePath == "" {
+		remotePath = camConfig.ID
+	}
+
 	schedConfig := scheduler.CameraConfig{
-		RemotePath:     camConfig.ID,
+		RemotePath:     remotePath,
 		ImageProcessor: imgProcessor,
 	}
 
