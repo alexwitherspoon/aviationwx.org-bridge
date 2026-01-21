@@ -72,6 +72,11 @@ function showSection(sectionId) {
         section.classList.toggle('active', section.id === sectionId);
     });
     
+    // Load section-specific data
+    if (sectionId === 'settings') {
+        loadGlobalSettings();
+    }
+    
     // Update URL
     window.location.hash = sectionId;
 }
@@ -974,6 +979,56 @@ async function saveWebSettings() {
         document.getElementById('webPassword').value = '';
     } catch (err) {
         alert('Failed to save: ' + err.message);
+    }
+}
+
+// Global Settings (concurrent uploads, update channel)
+async function loadGlobalSettings() {
+    if (!config) return;
+    
+    // Load max concurrent uploads (from top-level, not nested in global)
+    const maxConcurrent = config.max_concurrent_uploads || 2;
+    const maxConcurrentSelect = document.getElementById('maxConcurrentUploads');
+    if (maxConcurrentSelect) {
+        maxConcurrentSelect.value = maxConcurrent.toString();
+    }
+    
+    // Load update channel
+    const updateChannel = config.update_channel || 'latest';
+    const updateChannelSelect = document.getElementById('updateChannel');
+    if (updateChannelSelect) {
+        updateChannelSelect.value = updateChannel;
+    }
+}
+
+async function saveGlobalSettings() {
+    const maxConcurrent = parseInt(document.getElementById('maxConcurrentUploads').value);
+    const updateChannel = document.getElementById('updateChannel').value;
+    
+    if (maxConcurrent < 1 || maxConcurrent > 10) {
+        alert('Concurrent uploads must be between 1 and 10');
+        return;
+    }
+    
+    try {
+        // Update config with new global settings
+        const updatedConfig = {
+            ...config,
+            update_channel: updateChannel,
+            max_concurrent_uploads: maxConcurrent
+        };
+        
+        await api('/config', {
+            method: 'PUT',
+            body: JSON.stringify(updatedConfig),
+        });
+        
+        showNotification('✅ Settings saved successfully. Restart bridge to apply changes.', 'success');
+        
+        // Reload config to reflect changes
+        await loadConfig();
+    } catch (err) {
+        alert('Failed to save settings: ' + err.message);
     }
 }
 

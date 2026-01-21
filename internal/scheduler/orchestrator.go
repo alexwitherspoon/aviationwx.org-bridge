@@ -47,8 +47,9 @@ type OrchestratorConfig struct {
 	Timezone string // IANA timezone, e.g., "America/Los_Angeles"
 
 	// Upload settings
-	MinUploadInterval time.Duration // Default: 1 second
-	AuthBackoffSecs   int           // Default: 60
+	MinUploadInterval    time.Duration // Default: 1 second
+	AuthBackoffSecs      int           // Default: 60
+	MaxConcurrentUploads int           // Default: 2 (conservative for slow networks)
 
 	// Resource management
 	ResourceLimiter *resource.Limiter // Optional: limits concurrent CPU-intensive work
@@ -60,11 +61,12 @@ type OrchestratorConfig struct {
 // DefaultOrchestratorConfig returns sensible defaults
 func DefaultOrchestratorConfig() OrchestratorConfig {
 	return OrchestratorConfig{
-		QueueBasePath:     "/dev/shm/aviationwx",
-		QueueMaxTotalMB:   100,
-		QueueMaxHeapMB:    400,
-		MinUploadInterval: time.Second,
-		AuthBackoffSecs:   60,
+		QueueBasePath:        "/dev/shm/aviationwx",
+		QueueMaxTotalMB:      100,
+		QueueMaxHeapMB:       400,
+		MinUploadInterval:    time.Second,
+		AuthBackoffSecs:      60,
+		MaxConcurrentUploads: 2, // Conservative for slow networks
 	}
 }
 
@@ -169,10 +171,16 @@ func (o *Orchestrator) AddCamera(cam camera.Camera, config CameraConfig, interva
 
 	// Create upload worker if it doesn't exist yet
 	if o.uploadWorker == nil {
+		maxConcurrent := 2 // Default
+		if o.config.MaxConcurrentUploads > 0 {
+			maxConcurrent = o.config.MaxConcurrentUploads
+		}
+
 		uploadConfig := UploadWorkerConfig{
 			MinUploadInterval: o.config.MinUploadInterval,
 			AuthBackoff:       time.Duration(o.config.AuthBackoffSecs) * time.Second,
 			RetryDelay:        5 * time.Second,
+			MaxConcurrent:     maxConcurrent,
 			Logger:            o.logger,
 		}
 		o.uploadWorker = NewUploadWorker(uploadConfig)

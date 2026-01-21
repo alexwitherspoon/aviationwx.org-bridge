@@ -78,7 +78,7 @@ type uploadTask struct {
 // UploadWorkerConfig configures the upload worker
 // Note: Individual uploaders are set per-camera via AddQueue
 type UploadWorkerConfig struct {
-	MaxConcurrent      int           // Maximum concurrent uploads (default: 3)
+	MaxConcurrent      int           // Maximum concurrent uploads (default: 2)
 	CatchupThreshold   int           // Queue size to trigger LIFO mode (default: 20)
 	MinUploadInterval  time.Duration // Minimum time between uploads (default: 1 second)
 	AuthBackoff        time.Duration // Backoff after auth failure (default: 60 seconds)
@@ -94,7 +94,7 @@ func NewUploadWorker(cfg UploadWorkerConfig) *UploadWorker {
 	// Apply defaults
 	maxConcurrent := cfg.MaxConcurrent
 	if maxConcurrent == 0 {
-		maxConcurrent = 3 // Default: 3 concurrent uploads
+		maxConcurrent = 2 // Default: 2 concurrent uploads (conservative for slow networks)
 	}
 
 	catchupThreshold := cfg.CatchupThreshold

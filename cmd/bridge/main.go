@@ -282,12 +282,20 @@ func (b *Bridge) initOrchestrator() error {
 		queuePath = "/dev/shm/aviationwx"
 	}
 
+	global := b.configService.GetGlobal()
+
+	maxConcurrent := 2 // Default
+	if global.Global != nil && global.Global.MaxConcurrentUploads > 0 {
+		maxConcurrent = global.Global.MaxConcurrentUploads
+	}
+
 	orch, err := scheduler.NewOrchestrator(scheduler.OrchestratorConfig{
-		QueueBasePath:   queuePath,
-		QueueMaxTotalMB: 100,
-		QueueMaxHeapMB:  400,
-		ResourceLimiter: b.resourceLimiter,
-		Logger:          b.log,
+		QueueBasePath:        queuePath,
+		QueueMaxTotalMB:      100,
+		QueueMaxHeapMB:       400,
+		MaxConcurrentUploads: maxConcurrent,
+		ResourceLimiter:      b.resourceLimiter,
+		Logger:               b.log,
 	})
 	if err != nil {
 		return fmt.Errorf("create orchestrator: %w", err)
@@ -775,4 +783,15 @@ func getUpdateChannel(channel string) string {
 	}
 	// Default to latest for unknown values
 	return "latest"
+}
+
+// getMaxConcurrentUploads returns the max concurrent uploads with a safe default
+func getMaxConcurrentUploads(configured int) int {
+	if configured <= 0 {
+		return 2 // Default: conservative for slow networks
+	}
+	if configured > 10 {
+		return 10 // Cap at 10 to prevent resource exhaustion
+	}
+	return configured
 }
