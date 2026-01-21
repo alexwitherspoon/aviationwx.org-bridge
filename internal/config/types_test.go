@@ -196,17 +196,20 @@ func TestImageProcessing_GetQuality(t *testing.T) {
 func TestDefaultUpload(t *testing.T) {
 	upload := DefaultUpload()
 
+	if upload.Protocol != "sftp" {
+		t.Errorf("Protocol = %v, want sftp", upload.Protocol)
+	}
 	if upload.Host != "upload.aviationwx.org" {
 		t.Errorf("Host = %v, want upload.aviationwx.org", upload.Host)
 	}
-	if upload.Port != 2121 {
-		t.Errorf("Port = %v, want 2121", upload.Port)
+	if upload.Port != 2222 {
+		t.Errorf("Port = %v, want 2222 (SFTP default)", upload.Port)
 	}
 	if !upload.TLS {
-		t.Error("TLS should be true")
+		t.Error("TLS should be true (for FTPS fallback)")
 	}
 	if !upload.TLSVerify {
-		t.Error("TLSVerify should be true")
+		t.Error("TLSVerify should be true (for FTPS fallback)")
 	}
 }
 

@@ -79,3 +79,46 @@ func InitOrMigrate(baseDir string, legacyPath string) (*Service, error) {
 	// Neither exists, create fresh
 	return NewService(baseDir)
 }
+
+// NormalizeUploadConfig ensures upload config has sensible defaults and backward compatibility
+// This is called after loading camera configs to ensure protocol/port consistency
+func NormalizeUploadConfig(upload *Upload) {
+	if upload == nil {
+		return
+	}
+
+	// Default to SFTP if protocol not specified
+	if upload.Protocol == "" {
+		// Check port to infer protocol for backward compatibility
+		switch upload.Port {
+		case 21, 2121, 990: // Common FTP/FTPS ports
+			upload.Protocol = "ftps"
+		case 22, 2222: // Common SFTP ports
+			upload.Protocol = "sftp"
+		default:
+			// No port specified or unknown port - default to SFTP
+			upload.Protocol = "sftp"
+		}
+	}
+
+	// Set default port based on protocol if not specified
+	if upload.Port == 0 {
+		switch upload.Protocol {
+		case "sftp":
+			upload.Port = 2222 // aviationwx.org SFTP port
+		case "ftps":
+			upload.Port = 2121 // aviationwx.org FTPS port
+		default:
+			upload.Port = 2222 // Default to SFTP
+		}
+	}
+
+	// Set default timeouts if not specified
+	if upload.TimeoutConnectSeconds == 0 {
+		upload.TimeoutConnectSeconds = 60
+	}
+	if upload.TimeoutUploadSeconds == 0 {
+		upload.TimeoutUploadSeconds = 300
+	}
+}
+

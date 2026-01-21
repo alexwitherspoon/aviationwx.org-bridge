@@ -337,6 +337,9 @@ func (s *Service) reload() error {
 			return fmt.Errorf("parse camera file %s: %w", entry.Name(), err)
 		}
 
+		// Normalize upload config for backward compatibility
+		NormalizeUploadConfig(cam.Upload)
+
 		s.cameras[cam.ID] = &cam
 	}
 

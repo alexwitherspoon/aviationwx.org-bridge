@@ -19,10 +19,11 @@
       "snapshot_url": "http://192.168.1.100/snapshot.jpg",
       "capture_interval_seconds": 60,
       "upload": {
+        "protocol": "sftp",
         "host": "upload.aviationwx.org",
+        "port": 2222,
         "username": "your-username",
-        "password": "your-password",
-        "tls": true
+        "password": "your-password"
       }
     }
   ],
@@ -62,7 +63,7 @@
 | `onvif` | object | Cond. | - | ONVIF settings (if type=onvif) |
 | `capture_interval_seconds` | integer | No | `60` | Capture interval (1-1800) |
 | `image` | object | No | - | Image processing options |
-| `upload` | object | Yes | - | Per-camera FTP credentials |
+| `upload` | object | Yes | - | Per-camera upload credentials (SFTP/FTPS) |
 | `queue` | object | No | - | Per-camera queue overrides |
 
 ### Camera Auth Object
@@ -112,16 +113,62 @@ Controls optional image resizing/quality for bandwidth management.
 
 ### Camera Upload Object
 
-Each camera has its own FTP credentials.
+Each camera has its own upload credentials. Supports both SFTP (recommended) and FTPS (legacy) protocols.
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `host` | string | Yes | - | FTP server hostname |
-| `port` | integer | No | `21` | FTP server port |
-| `username` | string | Yes | - | FTP username |
-| `password` | string | Yes | - | FTP password |
-| `tls` | boolean | No | `true` | Enable FTPS |
-| `tls_verify` | boolean | No | `true` | Verify TLS certificate |
+| `protocol` | string | No | `"sftp"` | Upload protocol: `"sftp"` (recommended) or `"ftps"` (legacy) |
+| `host` | string | Yes | - | Upload server hostname |
+| `port` | integer | No | (auto) | Server port (22 for SFTP, 2121 for FTPS) |
+| `username` | string | Yes | - | Upload username |
+| `password` | string | Yes | - | Upload password |
+| `tls` | boolean | No | `true` | Enable FTPS (FTPS only, ignored for SFTP) |
+| `tls_verify` | boolean | No | `true` | Verify TLS certificate (FTPS only) |
+| `disable_epsv` | boolean | No | `true` | Use PASV instead of EPSV (FTPS only) |
+| `timeout_connect_seconds` | integer | No | `60` | Connection timeout |
+| `timeout_upload_seconds` | integer | No | `300` | Upload timeout (5 minutes) |
+
+#### Protocol Comparison
+
+| Feature | SFTP (Recommended) | FTPS (Legacy) |
+|---------|-------------------|---------------|
+| **Port** | 22 or 2222 (single) | 21 or 2121 + dynamic data ports |
+| **Encryption** | SSH | TLS |
+| **NAT Friendly** | ✅ Yes | ⚠️ Requires PASV mode |
+| **Firewall Rules** | ✅ Simple (single port) | ❌ Complex (dynamic ports) |
+| **Reliability** | ✅ Excellent | ⚠️ Moderate |
+| **Connection Drops** | ✅ Rare (SSH keep-alive) | ⚠️ Common (TCP issues) |
+
+#### Example Configurations
+
+**SFTP (Recommended):**
+```json
+{
+  "upload": {
+    "protocol": "sftp",
+    "host": "upload.aviationwx.org",
+    "port": 2222,
+    "username": "your-username",
+    "password": "your-password"
+  }
+}
+```
+
+**FTPS (Legacy):**
+```json
+{
+  "upload": {
+    "protocol": "ftps",
+    "host": "upload.aviationwx.org",
+    "port": 2121,
+    "username": "your-username",
+    "password": "your-password",
+    "tls": true,
+    "tls_verify": true,
+    "disable_epsv": true
+  }
+}
+```
 
 **Note**: Default host is `upload.aviationwx.org`. Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) for credentials.
 
