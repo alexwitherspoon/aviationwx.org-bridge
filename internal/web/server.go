@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"crypto/subtle"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -113,7 +114,10 @@ func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check for basic auth
 		_, password, ok := r.BasicAuth()
-		if !ok || password != s.configService.GetWebPassword() {
+		expectedPassword := s.configService.GetWebPassword()
+		// Use constant-time comparison to prevent timing attacks
+		passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(expectedPassword)) == 1
+		if !ok || !passwordMatch {
 			w.Header().Set("WWW-Authenticate", `Basic realm="AviationWX Bridge"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -133,7 +137,10 @@ func (s *Server) staticMiddleware(fileServer http.Handler) http.HandlerFunc {
 
 		// All other static files require auth
 		_, password, ok := r.BasicAuth()
-		if !ok || password != s.configService.GetWebPassword() {
+		expectedPassword := s.configService.GetWebPassword()
+		// Use constant-time comparison to prevent timing attacks
+		passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(expectedPassword)) == 1
+		if !ok || !passwordMatch {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}

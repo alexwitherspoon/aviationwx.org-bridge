@@ -2,7 +2,7 @@ package upload
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -49,16 +49,18 @@ func (c *SFTPClient) Upload(remotePath string, data []byte) error {
 	fileSize := int64(len(data))
 
 	// Normalize remote path and prepend base path
+	// Use path.Join (not filepath.Join) because SFTP always uses forward slashes
 	remotePath = normalizeRemotePath(remotePath)
 	if c.config.BasePath != "" {
-		remotePath = filepath.Join(c.config.BasePath, remotePath)
+		remotePath = path.Join(c.config.BasePath, remotePath)
 	}
 
 	// Create remote directory if needed
-	remoteDir := filepath.Dir(remotePath)
+	remoteDir := path.Dir(remotePath)
 	if err := c.sftpClient.MkdirAll(remoteDir); err != nil {
-		// Ignore error - directory may already exist
-		_ = err
+		// Log but continue - directory may already exist, or we may not have permission
+		// to create parent directories but can still write to existing ones
+		_ = err // Best-effort directory creation
 	}
 
 	// Atomic upload: write to .tmp, then rename
