@@ -213,6 +213,40 @@
                     </div>
                 </div>
 
+                <!-- Upload Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Upload Configuration</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="maxConcurrentUploads">Concurrent Uploads</label>
+                            <select id="maxConcurrentUploads" class="form-control">
+                                <option value="1">1 (Slowest connection)</option>
+                                <option value="2" selected>2 (Default - recommended)</option>
+                                <option value="3">3 (Faster connection)</option>
+                                <option value="4">4 (Fast connection)</option>
+                                <option value="5">5 (Very fast connection)</option>
+                            </select>
+                            <p class="form-help">
+                                Number of images to upload simultaneously. Lower values are better for slow internet connections to prevent timeouts.
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label for="updateChannel">Update Channel</label>
+                            <select id="updateChannel" class="form-control">
+                                <option value="latest" selected>Latest (Stable releases - recommended)</option>
+                                <option value="edge">Edge (Development builds - for testing)</option>
+                            </select>
+                            <p class="form-help">
+                                <strong>Latest:</strong> Stable releases only. Recommended for production use.<br>
+                                <strong>Edge:</strong> Latest development builds. May contain experimental features.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveGlobalSettings()">Save Settings</button>
+                    </div>
+                </div>
+
                 <!-- Advanced Settings -->
                 <div class="card">
                     <div class="card-header">

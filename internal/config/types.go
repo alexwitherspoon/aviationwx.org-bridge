@@ -153,6 +153,7 @@ type RTSP struct {
 type Global struct {
 	CaptureTimeoutSeconds int            `json:"capture_timeout_seconds,omitempty"` // Default: 30
 	RTSPTimeoutSeconds    int            `json:"rtsp_timeout_seconds,omitempty"`    // Default: 10
+	MaxConcurrentUploads  int            `json:"max_concurrent_uploads,omitempty"`  // Default: 2 (conservative for slow networks)
 	Backoff               *Backoff       `json:"backoff,omitempty"`
 	DegradedMode          *DegradedMode  `json:"degraded_mode,omitempty"`
 	TimeAuthority         *TimeAuthority `json:"time_authority,omitempty"`
