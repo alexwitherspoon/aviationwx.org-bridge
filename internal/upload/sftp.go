@@ -70,13 +70,13 @@ func (c *SFTPClient) Upload(remotePath string, data []byte) error {
 	_, err = remote.Write(data)
 	remote.Close()
 	if err != nil {
-		c.sftpClient.Remove(tmpPath) // Cleanup on failure
+		_ = c.sftpClient.Remove(tmpPath) // Cleanup on failure (best-effort)
 		return fmt.Errorf("upload failed: %w", err)
 	}
 
 	// Atomic rename
 	if err := c.sftpClient.Rename(tmpPath, remotePath); err != nil {
-		c.sftpClient.Remove(tmpPath) // Cleanup on rename failure
+		_ = c.sftpClient.Remove(tmpPath) // Cleanup on rename failure (best-effort)
 		return fmt.Errorf("rename failed: %w", err)
 	}
 
