@@ -5,9 +5,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/secsy/goftp"
@@ -213,12 +215,11 @@ func (c *FTPSClient) connect() (*goftp.Client, error) {
 
 // uploadFile uploads data to the specified remote path
 func (c *FTPSClient) uploadFile(conn *goftp.Client, remotePath string, data []byte) error {
-	// Create reader from data
-	reader := bytes.NewReader(data)
+	// Create progress-tracking reader
+	reader := newProgressReader(bytes.NewReader(data), int64(len(data)))
 
-	// Upload with timeout
+	// Upload with progress tracking
 	// Note: goftp doesn't have built-in upload timeout, so we rely on connection timeout
-	// For upload timeout, we'd need to implement a timeout wrapper around the reader
 	err := conn.Store(remotePath, reader)
 	if err != nil {
 		// Check for timeout
@@ -306,4 +307,43 @@ func isAuthError(err error) bool {
 		strings.Contains(errStr, "authentication") ||
 		strings.Contains(errStr, "login") ||
 		strings.Contains(errStr, "password")
+}
+
+// progressReader wraps an io.Reader and tracks bytes transferred
+type progressReader struct {
+	reader        io.Reader
+	bytesRead     *atomic.Int64
+	lastProgress  *atomic.Int64
+	totalSize     int64
+}
+
+func newProgressReader(reader io.Reader, totalSize int64) *progressReader {
+	return &progressReader{
+		reader:       reader,
+		bytesRead:    &atomic.Int64{},
+		lastProgress: &atomic.Int64{},
+		totalSize:    totalSize,
+	}
+}
+
+func (pr *progressReader) Read(p []byte) (n int, err error) {
+	n, err = pr.reader.Read(p)
+	if n > 0 {
+		pr.bytesRead.Add(int64(n))
+		pr.lastProgress.Store(time.Now().UnixNano())
+	}
+	return n, err
+}
+
+// GetProgress returns bytes read and percentage
+func (pr *progressReader) GetProgress() (bytesRead int64, percent float64, lastActivity time.Time) {
+	bytes := pr.bytesRead.Load()
+	lastNano := pr.lastProgress.Load()
+	
+	var pct float64
+	if pr.totalSize > 0 {
+		pct = float64(bytes) / float64(pr.totalSize) * 100
+	}
+	
+	return bytes, pct, time.Unix(0, lastNano)
 }
