@@ -13,10 +13,6 @@ AviationWX Bridge is a lightweight daemon that:
 
 **Perfect for**: Airport operators wanting to provide webcam feeds to pilots for weather assessment and flight safety.
 
-| Dashboard | Camera Configuration |
-|:---------:|:--------------------:|
-| ![Dashboard](docs/images/dashboard.png) | ![Add Camera](docs/images/add-camera.png) |
-
 ---
 
 ## Installation
@@ -278,6 +274,30 @@ docker rm aviationwx-bridge
 - **[Queue & Memory Management](docs/QUEUE_STORAGE.md)** - How storage and memory are managed
 - **[Config Reference](docs/CONFIG_SCHEMA.md)** - Full configuration options
 - **[Changelog](CHANGELOG.md)** - Version history
+
+---
+
+## Web Console Screenshots
+
+### Dashboard
+
+![Dashboard](docs/images/dashboard.jpg)
+
+### Cameras
+
+![Cameras](docs/images/cameras.jpg)
+
+### Add Camera
+
+![Add Camera](docs/images/add-camera.jpg)
+
+### Settings
+
+![Settings](docs/images/settings.jpg)
+
+### Logs
+
+![Logs](docs/images/logs.jpg)
 
 ---
 
