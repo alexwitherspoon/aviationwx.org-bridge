@@ -4,7 +4,7 @@
 
 set -e
 
-CONTAINER_NAME="aviationwx.org-bridge"
+CONTAINER_NAME="aviationwx-org-bridge"
 LOG_PREFIX="[$(date '+%Y-%m-%d %H:%M:%S')]"
 
 echo "$LOG_PREFIX Starting daily restart of $CONTAINER_NAME"

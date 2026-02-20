@@ -6,9 +6,9 @@
 set -euo pipefail
 
 readonly SCRIPT_VERSION="2.0"
-readonly GITHUB_REPO="alexwitherspoon/AviationWX.org-Bridge"
-readonly IMAGE_NAME="ghcr.io/${GITHUB_REPO}"
-readonly CONTAINER_NAME="aviationwx.org-bridge"
+readonly GITHUB_REPO="alexwitherspoon/aviationwx.org-bridge"
+readonly IMAGE_NAME="ghcr.io/alexwitherspoon/aviationwx-org-bridge"
+readonly CONTAINER_NAME="aviationwx-org-bridge"
 readonly DATA_DIR="/data/aviationwx"
 readonly CONFIG_FILE="${DATA_DIR}/global.json"
 readonly LOG_FILE="${DATA_DIR}/supervisor.log"
@@ -160,7 +160,7 @@ update_host_scripts() {
 # ============================================================================
 
 get_current_version() {
-    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -Fq 'aviationwx.org-bridge'; then
+    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -Fq 'aviationwx-org-bridge'; then
         docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' | cut -d: -f2
     else
         cat "${DATA_DIR}/last-known-good.txt" 2>/dev/null || echo "unknown"
@@ -185,22 +185,18 @@ get_latest_release_json() {
     local attempt=0
     local max_attempts=3
     
-    # Use lowercase repo path - GitHub normalizes to lowercase; some clients 404 on mixed case with dots
-    local api_repo
-    api_repo=$(echo "${GITHUB_REPO}" | tr '[:upper:]' '[:lower:]')
-    
     while [ $attempt -lt $max_attempts ]; do
         local release_json
         # Try /releases/latest first
         release_json=$(curl -sf --max-time 10 \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${api_repo}/releases/latest" 2>/dev/null)
+            "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" 2>/dev/null)
         # Fallback: use list endpoint - /releases/latest can 404 for repo names with dots
         if [ -z "$release_json" ] || [ "$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)" = "" ]; then
             local releases_list
             releases_list=$(curl -sf --max-time 10 \
                 -H "Accept: application/vnd.github.v3+json" \
-                "https://api.github.com/repos/${api_repo}/releases?per_page=5" 2>/dev/null)
+                "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=5" 2>/dev/null)
             if [ -n "$releases_list" ]; then
                 release_json=$(echo "$releases_list" | jq -c '[.[] | select(.prerelease == false)][0] // .[0]' 2>/dev/null)
             fi

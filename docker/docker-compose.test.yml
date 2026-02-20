@@ -9,7 +9,7 @@
 
 services:
   bridge:
-    container_name: aviationwx.org-bridge-test
+    container_name: aviationwx-org-bridge-test
     ports:
       - "1230:1229"  # Test on port 1230 instead of 1229
     volumes:

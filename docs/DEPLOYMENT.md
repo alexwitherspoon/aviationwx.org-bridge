@@ -70,24 +70,24 @@ For environments with existing Docker infrastructure.
 ### Basic Deployment
 
 ```bash
-docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
+docker pull ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
 
 docker run -d \
-  --name aviationwx.org-bridge \
+  --name aviationwx-org-bridge \
   --restart=unless-stopped \
   -p 1229:1229 \
   -v /opt/aviationwx/data:/data \
   --tmpfs /dev/shm:size=200m \
-  ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
+  ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
 ```
 
 ### Docker Compose
 
 ```yaml
 services:
-  aviationwx.org-bridge:
-    image: ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
-    container_name: aviationwx.org-bridge
+  aviationwx-org-bridge:
+    image: ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
+    container_name: aviationwx-org-bridge
     restart: unless-stopped
     ports:
       - "1229:1229"
@@ -105,18 +105,18 @@ For production stability:
 
 ```yaml
 # Pin to specific version
-image: ghcr.io/alexwitherspoon/AviationWX.org-Bridge:1.0.0
+image: ghcr.io/alexwitherspoon/aviationwx-org-bridge:1.0.0
 
 # Or pin to minor version (gets patches)
-image: ghcr.io/alexwitherspoon/AviationWX.org-Bridge:1.0
+image: ghcr.io/alexwitherspoon/aviationwx-org-bridge:1.0
 ```
 
 ### Updating
 
 ```bash
-docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
-docker stop aviationwx.org-bridge
-docker rm aviationwx.org-bridge
+docker pull ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
+docker stop aviationwx-org-bridge
+docker rm aviationwx-org-bridge
 docker run -d ... # same run command
 ```
 
@@ -226,10 +226,10 @@ curl http://localhost:1229/api/status | jq
 
 ```bash
 # Docker logs
-docker logs aviationwx.org-bridge -f
+docker logs aviationwx-org-bridge -f
 
 # Last 100 lines
-docker logs aviationwx.org-bridge --tail=100
+docker logs aviationwx-org-bridge --tail=100
 
 # Supervisor logs (Pi install only)
 cat /data/aviationwx/supervisor.log
@@ -319,15 +319,15 @@ sudo /usr/local/bin/aviationwx-supervisor update
 Change the `--tmpfs` size parameter:
 
 ```bash
-docker stop aviationwx.org-bridge
-docker rm aviationwx.org-bridge
+docker stop aviationwx-org-bridge
+docker rm aviationwx-org-bridge
 docker run -d \
-  --name aviationwx.org-bridge \
+  --name aviationwx-org-bridge \
   --restart=unless-stopped \
   -p 1229:1229 \
   -v /data/aviationwx:/data \
   --tmpfs /dev/shm:size=300m \
-  ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
+  ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
 ```
 
 #### Docker Compose
@@ -336,7 +336,7 @@ Update the `tmpfs` size in your compose file:
 
 ```yaml
 services:
-  aviationwx.org-bridge:
+  aviationwx-org-bridge:
     # ... other config ...
     tmpfs:
       - /dev/shm:size=300m  # Increased from default 200m
@@ -354,7 +354,7 @@ For easier management, use the `AVIATIONWX_TMPFS_SIZE` environment variable:
 
 ```yaml
 services:
-  aviationwx.org-bridge:
+  aviationwx-org-bridge:
     # ... other config ...
     tmpfs:
       - /dev/shm:size=${AVIATIONWX_TMPFS_SIZE:-200m}
@@ -430,7 +430,7 @@ docker run --rm \
 cp ~/config-backup.json /data/aviationwx/config.json
 
 # Restart
-docker restart aviationwx.org-bridge
+docker restart aviationwx-org-bridge
 ```
 
 ### Complete Recovery
@@ -450,7 +450,7 @@ If device fails:
 
 ```bash
 # Check logs
-docker logs aviationwx.org-bridge
+docker logs aviationwx-org-bridge
 
 # Validate config
 python3 -m json.tool /data/aviationwx/config.json
@@ -485,7 +485,7 @@ curl -v ftps://upload.aviationwx.org:21
 
 ```bash
 # Check container memory
-docker stats aviationwx.org-bridge
+docker stats aviationwx-org-bridge
 
 # Check queue storage usage
 curl http://localhost:1229/api/status | jq '.orchestrator.queue_storage'

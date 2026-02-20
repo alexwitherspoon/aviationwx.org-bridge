@@ -20,7 +20,7 @@ secrets.env
 go.work
 go.work.sum
 /bridge
-/aviationwx.org-bridge
+/aviationwx-org-bridge
 
 # Go dependencies
 vendor/

@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 # AviationWX.org Bridge - Installation Script
-# https://github.com/alexwitherspoon/AviationWX.org-Bridge
+# https://github.com/alexwitherspoon/aviationwx.org-bridge
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Bridge/main/scripts/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx.org-bridge/main/scripts/install.sh | sudo bash
 #
 # This script:
 #   1. Installs Docker (if not present)
@@ -16,9 +16,9 @@
 set -euo pipefail
 
 # Configuration
-REPO="alexwitherspoon/AviationWX.org-Bridge"
-IMAGE_NAME="ghcr.io/${REPO}"
-CONTAINER_NAME="aviationwx.org-bridge"
+REPO="alexwitherspoon/aviationwx.org-bridge"
+IMAGE_NAME="ghcr.io/alexwitherspoon/aviationwx-org-bridge"
+CONTAINER_NAME="aviationwx-org-bridge"
 DATA_DIR="/data/aviationwx"
 WEB_PORT="1229"
 ENV_FILE="${DATA_DIR}/environment"
@@ -374,15 +374,18 @@ get_tmpfs_size() {
     echo "${AVIATIONWX_TMPFS_SIZE:-${DEFAULT_TMPFS_SIZE}}"
 }
 
-# Migration: stop old container from pre-rename installs (aviationwx-bridge → aviationwx.org-bridge)
+# Migration: stop old container from pre-rename installs (aviationwx-bridge → aviationwx-org-bridge)
 migrate_from_old_container() {
     local old_container="aviationwx-bridge"
-    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$old_container"; then
-        log_info "Migrating from old container ($old_container) - stopping and removing..."
-        docker stop "$old_container" 2>/dev/null || true
-        docker rm "$old_container" 2>/dev/null || true
-        log_success "Old container removed"
-    fi
+    local old_container_alt="aviationwx.org-bridge"
+    for c in "$old_container" "$old_container_alt"; do
+        if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$c"; then
+            log_info "Migrating from old container ($c) - stopping and removing..."
+            docker stop "$c" 2>/dev/null || true
+            docker rm "$c" 2>/dev/null || true
+            log_success "Old container removed"
+        fi
+    done
 }
 
 # Initial bootstrap - run boot-update and start container

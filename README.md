@@ -49,24 +49,24 @@ curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Brid
 **Best for:** Professional environments with existing Docker infrastructure and IT teams.
 
 ```bash
-docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
+docker pull ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
 
 docker run -d \
-  --name aviationwx.org-bridge \
+  --name aviationwx-org-bridge \
   --restart=unless-stopped \
   -p 1229:1229 \
   -v /opt/aviationwx/data:/data \
   --tmpfs /dev/shm:size=200m \
-  ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
+  ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
 ```
 
 **Docker Compose:**
 
 ```yaml
 services:
-  aviationwx.org-bridge:
-    image: ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
-    container_name: aviationwx.org-bridge
+  aviationwx-org-bridge:
+    image: ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
+    container_name: aviationwx-org-bridge
     restart: unless-stopped
     ports:
       - "1229:1229"
@@ -117,9 +117,9 @@ cat /data/aviationwx/update-available.json
 Update using your preferred method:
 
 ```bash
-docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:latest
-docker stop aviationwx.org-bridge
-docker rm aviationwx.org-bridge
+docker pull ghcr.io/alexwitherspoon/aviationwx-org-bridge:latest
+docker stop aviationwx-org-bridge
+docker rm aviationwx-org-bridge
 docker run -d ... # (same run command as before)
 ```
 
@@ -242,7 +242,7 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
 ### View logs
 ```bash
 # Container logs
-docker logs aviationwx.org-bridge
+docker logs aviationwx-org-bridge
 
 # Supervisor logs (Path A only)
 cat /data/aviationwx/supervisor.log
@@ -250,7 +250,7 @@ cat /data/aviationwx/supervisor.log
 
 ### Restart the bridge
 ```bash
-docker restart aviationwx.org-bridge
+docker restart aviationwx-org-bridge
 ```
 
 ### Force rollback (Path A only)
@@ -260,8 +260,8 @@ sudo /usr/local/bin/aviationwx-supervisor rollback
 
 ### Complete reinstall
 ```bash
-docker stop aviationwx.org-bridge
-docker rm aviationwx.org-bridge
+docker stop aviationwx-org-bridge
+docker rm aviationwx-org-bridge
 # Re-run installation command
 ```
 

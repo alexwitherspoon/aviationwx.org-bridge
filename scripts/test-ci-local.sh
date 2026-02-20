@@ -124,15 +124,15 @@ run_docker_build() {
         -f docker/Dockerfile \
         --build-arg VERSION=dev \
         --build-arg GIT_COMMIT="${git_commit}" \
-        -t aviationwx.org-bridge:local-test \
+        -t aviationwx-org-bridge:local-test \
         .
     
-    log_success "Docker image built: aviationwx.org-bridge:local-test"
+    log_success "Docker image built: aviationwx-org-bridge:local-test"
     
     # Quick smoke test
     log_info "Running smoke test..."
-    docker run --rm aviationwx.org-bridge:local-test --version 2>/dev/null || \
-        docker run --rm aviationwx.org-bridge:local-test exiftool -ver
+    docker run --rm aviationwx-org-bridge:local-test --version 2>/dev/null || \
+        docker run --rm aviationwx-org-bridge:local-test exiftool -ver
     
     log_success "Docker smoke test passed"
 }

@@ -1,5 +1,5 @@
 {
-  "name": "aviationwx.org-bridge",
+  "name": "aviationwx-org-bridge",
   "private": true,
   "type": "module",
   "scripts": {

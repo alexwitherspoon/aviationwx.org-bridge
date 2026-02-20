@@ -12,6 +12,7 @@ This document outlines coding standards and development practices for AviationWX
 - [Testing Requirements](#testing-requirements)
 - [Error Handling](#error-handling)
 - [Configuration Management](#configuration-management)
+- [Project Identifiers](#project-identifiers)
 - [Logging](#logging)
 - [Dependencies](#dependencies)
 - [Git Workflow](#git-workflow)
@@ -269,6 +270,43 @@ func UploadImage(ctx context.Context, data []byte, path string) error {
 - **Fail fast**: Bad config should prevent startup
 - **Clear error messages**: Errors should clearly indicate what's wrong
 - **Validation**: Validate all required fields and types
+
+---
+
+## Project Identifiers
+
+Use the correct form depending on context:
+
+### `aviationwx.org-bridge` (with period)
+
+**Use only for GitHub URLs—the repo name cannot be changed.**
+
+- **GitHub repo path**: `alexwitherspoon/aviationwx.org-bridge`, `github.com/.../aviationwx.org-bridge`
+- **API URLs**: `api.github.com/repos/alexwitherspoon/aviationwx.org-bridge/...`
+- **Raw content URLs**: `raw.githubusercontent.com/.../aviationwx.org-bridge/...`
+
+### `aviationwx-org-bridge` (with hyphen)
+
+**Use everywhere else.** Hyphens avoid case-sensitivity and portability issues.
+
+- **GHCR image path**: `ghcr.io/alexwitherspoon/aviationwx-org-bridge`
+- **Container name**: `aviationwx-org-bridge`
+- **Binary artifacts**: `aviationwx-org-bridge-linux-amd64`, etc.
+- **Local Docker image tags**: `aviationwx-org-bridge:latest`, `aviationwx-org-bridge:local-test`
+- **Package name** (package.json): `aviationwx-org-bridge`
+- **User-Agent header**: `aviationwx-org-bridge/1.0.0`
+- **.gitignore patterns**: `/aviationwx-org-bridge`
+- **docker-compose service/container_name**: `aviationwx-org-bridge`
+
+### Quick reference
+
+| Context | Form |
+|---------|------|
+| GitHub URL, repo path | `aviationwx.org-bridge` |
+| GHCR image path | `aviationwx-org-bridge` |
+| Container name | `aviationwx-org-bridge` |
+| Binary name | `aviationwx-org-bridge-{arch}` |
+| Package name | `aviationwx-org-bridge` |
 
 ---
 

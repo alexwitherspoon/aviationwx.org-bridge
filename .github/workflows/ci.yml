@@ -174,7 +174,7 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
+      IMAGE_NAME: alexwitherspoon/aviationwx-org-bridge
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
