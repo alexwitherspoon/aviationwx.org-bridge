@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -151,11 +153,19 @@ func TestWebServerAPIWithConfigService(t *testing.T) {
 		cameraWorkerStatus: make(map[string]*CameraWorkerStatus),
 	}
 
-	// Create web server
+	// Create web server with TestCamera mock for full HTTP→Bridge path
+	fakeJPEG := []byte{0xFF, 0xD8, 0xFF, 0xD9}
 	bridge.webServer = web.NewServer(web.ServerConfig{
 		ConfigService:   svc,
 		GetStatus:       bridge.getStatus,
 		GetWorkerStatus: bridge.getWorkerStatus,
+		TestCamera: func(c config.Camera) ([]byte, error) {
+			if c.Type == "http" && c.SnapshotURL != "" {
+				return fakeJPEG, nil
+			}
+			return nil, fmt.Errorf("unsupported camera type or config")
+		},
+		TestUpload: func(config.Upload) error { return nil },
 	})
 
 	// Helper function to make authenticated requests
@@ -279,6 +289,20 @@ func TestWebServerAPIWithConfigService(t *testing.T) {
 		_, err := svc.GetCamera("web-test-cam")
 		if err == nil {
 			t.Error("Expected camera to be deleted")
+		}
+	})
+
+	t.Run("POST /api/test/camera", func(t *testing.T) {
+		camJSON := `{"id":"test","type":"http","snapshot_url":"http://example.com/snap.jpg"}`
+		w := makeRequest("POST", "/api/test/camera", strings.NewReader(camJSON))
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+		if ct := w.Header().Get("Content-Type"); ct != "image/jpeg" {
+			t.Errorf("Expected Content-Type image/jpeg, got %s", ct)
+		}
+		if !bytes.Equal(w.Body.Bytes(), fakeJPEG) {
+			t.Error("Response body should match TestCamera mock image")
 		}
 	})
 }
