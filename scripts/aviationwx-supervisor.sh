@@ -187,11 +187,21 @@ get_latest_release_json() {
     
     while [ $attempt -lt $max_attempts ]; do
         local release_json
+        # Try /releases/latest first
         release_json=$(curl -sf --max-time 10 \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" 2>/dev/null)
-        
-        if [ -n "$release_json" ]; then
+        # Fallback: use list endpoint - /releases/latest can 404 for repo names with dots
+        if [ -z "$release_json" ] || [ "$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)" = "" ]; then
+            local releases_list
+            releases_list=$(curl -sf --max-time 10 \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=5" 2>/dev/null)
+            if [ -n "$releases_list" ]; then
+                release_json=$(echo "$releases_list" | jq -c '[.[] | select(.prerelease == false)][0] // .[0]' 2>/dev/null)
+            fi
+        fi
+        if [ -n "$release_json" ] && [ "$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)" != "" ]; then
             echo "$release_json" > "$cache_file"
             echo "$release_json"
             return 0
@@ -237,8 +247,15 @@ determine_target_version() {
         echo "edge"
     else
         local tag_name
-        tag_name=$(echo "$release_json" | jq -r '.tag_name // empty')
+        tag_name=$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)
         
+        if [ -z "$tag_name" ]; then
+            # Fallback: extract from name field (e.g. "AviationWX.org Bridge v2.4.1") or body
+            tag_name=$(echo "$release_json" | jq -r '.name // empty' 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        fi
+        if [ -z "$tag_name" ]; then
+            tag_name=$(echo "$release_json" | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v[0-9]+\.[0-9]+\.[0-9]+"' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        fi
         if [ -z "$tag_name" ]; then
             log_event "ERROR" "Cannot parse release tag" >&2
             return 1

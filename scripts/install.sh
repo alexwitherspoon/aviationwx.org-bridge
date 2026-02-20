@@ -374,8 +374,21 @@ get_tmpfs_size() {
     echo "${AVIATIONWX_TMPFS_SIZE:-${DEFAULT_TMPFS_SIZE}}"
 }
 
+# Migration: stop old container from pre-rename installs (aviationwx-bridge → aviationwx.org-bridge)
+migrate_from_old_container() {
+    local old_container="aviationwx-bridge"
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$old_container"; then
+        log_info "Migrating from old container ($old_container) - stopping and removing..."
+        docker stop "$old_container" 2>/dev/null || true
+        docker rm "$old_container" 2>/dev/null || true
+        log_success "Old container removed"
+    fi
+}
+
 # Initial bootstrap - run boot-update and start container
 bootstrap_container() {
+    migrate_from_old_container
+    
     log_info "Running initial boot-update..."
     
     # Initialize last-known-good to latest
@@ -506,7 +519,7 @@ main() {
     echo ""
     echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║              AviationWX.org Bridge Installer                   ║${NC}"
-    echo -e "${BLUE}║              https://aviationwx.org                          ║${NC}"
+    echo -e "${BLUE}║              https://aviationwx.org                           ║${NC}"
     echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
