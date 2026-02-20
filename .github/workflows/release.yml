@@ -193,9 +193,9 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: AviationWX Bridge ${{ steps.version.outputs.VERSION }}
+          name: AviationWX.org Bridge ${{ steps.version.outputs.VERSION }}
           body: |
-            ## AviationWX Bridge ${{ steps.version.outputs.VERSION }}
+            ## AviationWX.org Bridge ${{ steps.version.outputs.VERSION }}
             
             <!-- AVIATIONWX_RELEASE_META {"version": "${{ steps.version.outputs.VERSION_NUM }}", "critical": ${{ steps.version.outputs.CRITICAL }}, "force_update": false, "rollback_safe": true} -->
             

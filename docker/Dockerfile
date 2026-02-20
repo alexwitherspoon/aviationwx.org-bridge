@@ -1,4 +1,4 @@
-# Multi-stage build for AviationWX Bridge
+# Multi-stage build for AviationWX.org Bridge
 # Stage 1: Build Go binary
 FROM golang:1.24-alpine AS builder
 

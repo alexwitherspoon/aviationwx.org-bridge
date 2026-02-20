@@ -1,5 +1,5 @@
 #!/bin/bash
-# AviationWX Bridge - Unified Supervisor
+# AviationWX.org Bridge - Unified Supervisor
 # Handles updates for both host scripts and container
 # Version: 2.0
 
@@ -160,7 +160,7 @@ update_host_scripts() {
 # ============================================================================
 
 get_current_version() {
-    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -q aviationwx.org-bridge; then
+    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -Fq 'aviationwx.org-bridge'; then
         docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' | cut -d: -f2
     else
         cat "${DATA_DIR}/last-known-good.txt" 2>/dev/null || echo "unknown"

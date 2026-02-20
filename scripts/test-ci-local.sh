@@ -182,7 +182,7 @@ main() {
     
     echo ""
     echo "╔════════════════════════════════════════════════════════════╗"
-    echo "║           AviationWX Bridge - Local CI Testing             ║"
+    echo "║           AviationWX.org Bridge - Local CI Testing         ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo ""
     

@@ -1,6 +1,6 @@
-# Contributing to AviationWX Bridge
+# Contributing to AviationWX.org Bridge
 
-Thank you for your interest in contributing to AviationWX Bridge! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to AviationWX.org Bridge! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -170,7 +170,7 @@ docker compose -f docker/docker-compose.yml up -d
 - Check existing documentation first
 - Be respectful and constructive in all communications
 
-Thank you for contributing to AviationWX Bridge! 🛩️
+Thank you for contributing to AviationWX.org Bridge! 🛩️
 
 
 

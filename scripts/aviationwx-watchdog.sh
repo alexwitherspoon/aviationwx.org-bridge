@@ -1,5 +1,5 @@
 #!/bin/bash
-# AviationWX Bridge - Host-Level Watchdog
+# AviationWX.org Bridge - Host-Level Watchdog
 # Monitors host health (NTP, network, Docker) and triggers recovery
 # Version: 2.0
 

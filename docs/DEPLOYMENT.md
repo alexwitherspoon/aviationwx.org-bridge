@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying AviationWX Bridge to production.
+This guide covers deploying AviationWX.org Bridge to production.
 
 ## Deployment Options
 
@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Brid
 This script:
 1. Installs Docker (if not present)
 2. Installs the update supervisor
-3. Pulls and starts the AviationWX Bridge container
+3. Pulls and starts the AviationWX.org Bridge container
 4. Configures automatic security updates
 5. Sets up automatic restart on boot
 

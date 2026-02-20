@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# AviationWX Bridge - Installation Script
+# AviationWX.org Bridge - Installation Script
 # https://github.com/alexwitherspoon/AviationWX.org-Bridge
 #
 # Usage:
@@ -9,7 +9,7 @@
 # This script:
 #   1. Installs Docker (if not present)
 #   2. Installs the update supervisor
-#   3. Pulls and starts the AviationWX Bridge container
+#   3. Pulls and starts the AviationWX.org Bridge container
 #   4. Configures automatic updates
 #
 
@@ -115,7 +115,7 @@ configure_docker_logging() {
         if [[ ! -f /etc/systemd/journald.conf.d/aviationwx.conf ]]; then
             mkdir -p /etc/systemd/journald.conf.d
             cat > /etc/systemd/journald.conf.d/aviationwx.conf << 'EOF'
-# AviationWX Bridge - Journald volatile storage
+# AviationWX.org Bridge - Journald volatile storage
 # Stores logs in RAM to prevent SD card wear
 [Journal]
 Storage=volatile
@@ -196,7 +196,7 @@ setup_data_dir() {
     # Create environment file if it doesn't exist
     if [[ ! -f "${ENV_FILE}" ]]; then
         cat > "${ENV_FILE}" << 'EOF'
-# AviationWX Bridge Environment Configuration
+# AviationWX.org Bridge Environment Configuration
 # Edit this file to customize settings, then restart the container.
 #
 # Tmpfs size for image queue (RAM-based storage)
@@ -253,7 +253,7 @@ setup_systemd() {
     # Boot-time update service
     cat > /etc/systemd/system/aviationwx-boot-update.service << 'EOF'
 [Unit]
-Description=AviationWX Bridge Boot-Time Update
+Description=AviationWX.org Bridge Boot-Time Update
 After=docker.service network-online.target
 Requires=docker.service
 Wants=network-online.target
@@ -274,7 +274,7 @@ EOF
     # Container start service
     cat > /etc/systemd/system/aviationwx-container.service << 'EOF'
 [Unit]
-Description=AviationWX Bridge Container
+Description=AviationWX.org Bridge Container
 After=aviationwx-boot-update.service docker.service
 Requires=docker.service
 BindsTo=aviationwx-boot-update.service
@@ -293,7 +293,7 @@ EOF
     # Daily update timer
     cat > /etc/systemd/system/aviationwx-daily-update.timer << 'EOF'
 [Unit]
-Description=AviationWX Bridge Daily Update Check
+Description=AviationWX.org Bridge Daily Update Check
 
 [Timer]
 OnCalendar=daily
@@ -306,7 +306,7 @@ EOF
 
     cat > /etc/systemd/system/aviationwx-daily-update.service << 'EOF'
 [Unit]
-Description=AviationWX Bridge Daily Update
+Description=AviationWX.org Bridge Daily Update
 After=docker.service
 Requires=docker.service
 
@@ -324,7 +324,7 @@ EOF
     # Watchdog timer
     cat > /etc/systemd/system/aviationwx-watchdog.timer << 'EOF'
 [Unit]
-Description=AviationWX Bridge Watchdog Timer
+Description=AviationWX.org Bridge Watchdog Timer
 
 [Timer]
 OnBootSec=2min
@@ -337,7 +337,7 @@ EOF
 
     cat > /etc/systemd/system/aviationwx-watchdog.service << 'EOF'
 [Unit]
-Description=AviationWX Bridge Watchdog
+Description=AviationWX.org Bridge Watchdog
 After=docker.service
 
 [Service]
@@ -480,22 +480,22 @@ print_complete() {
 
     echo ""
     echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║         AviationWX Bridge - Installation Complete!            ║${NC}"
+    echo -e "${GREEN}║         AviationWX.org Bridge - Installation Complete!         ║${NC}"
     echo -e "${GREEN}╠═══════════════════════════════════════════════════════════════╣${NC}"
     echo -e "${GREEN}║${NC}                                                               ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  Web Console: ${BLUE}http://${ip}:${WEB_PORT}${NC}                          ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  Password:    ${YELLOW}aviationwx${NC} (change this!)                      ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  Web Console: ${BLUE}http://${ip}:${WEB_PORT}${NC}                         ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  Password:    ${YELLOW}aviationwx${NC} (change this!)                     ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}                                                               ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  Updates are checked daily.                                    ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  Watchdog monitors host health every minute.                   ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  Updates are checked daily.                                   ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  Watchdog monitors host health every minute.                  ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}                                                               ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  ${BLUE}Next steps:${NC}                                                  ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  1. Open the web console                                      ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  2. Change the default password                               ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  3. Add your camera(s)                                        ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  4. Configure upload credentials from aviationwx.org          ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  ${BLUE}Next steps:${NC}                                                 ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  1. Open the web console                                     ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  2. Change the default password                              ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  3. Add your camera(s)                                       ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  4. Configure upload credentials from aviationwx.org         ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}                                                               ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  Need credentials? Email: ${BLUE}contact@aviationwx.org${NC}              ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  Need credentials? Email: ${BLUE}contact@aviationwx.org${NC}             ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}                                                               ${GREEN}║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -505,8 +505,8 @@ print_complete() {
 main() {
     echo ""
     echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║              AviationWX Bridge Installer                      ║${NC}"
-    echo -e "${BLUE}║              https://aviationwx.org                           ║${NC}"
+    echo -e "${BLUE}║              AviationWX.org Bridge Installer                   ║${NC}"
+    echo -e "${BLUE}║              https://aviationwx.org                          ║${NC}"
     echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
@@ -524,7 +524,7 @@ main() {
 
 # Handle uninstall
 uninstall() {
-    log_info "Uninstalling AviationWX Bridge..."
+    log_info "Uninstalling AviationWX.org Bridge..."
 
     # Stop and remove container
     docker stop "${CONTAINER_NAME}" 2>/dev/null || true
@@ -580,7 +580,7 @@ uninstall() {
 
     log_warn "Data directory preserved at ${DATA_DIR}"
     log_warn "To remove data: sudo rm -rf ${DATA_DIR}"
-    log_success "AviationWX Bridge uninstalled"
+    log_success "AviationWX.org Bridge uninstalled"
 }
 
 # Parse arguments

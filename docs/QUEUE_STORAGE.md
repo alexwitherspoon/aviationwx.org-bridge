@@ -1,6 +1,6 @@
 # Queue Storage & Memory Management
 
-This document explains how AviationWX Bridge manages image queues, memory, and storage to ensure reliable operation on resource-constrained devices like the Raspberry Pi Zero 2 W.
+This document explains how AviationWX.org Bridge manages image queues, memory, and storage to ensure reliable operation on resource-constrained devices like the Raspberry Pi Zero 2 W.
 
 ## Overview
 

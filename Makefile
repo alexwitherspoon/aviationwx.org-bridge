@@ -56,7 +56,7 @@ docker-restart: docker-down docker-up ## Restart Docker Compose
 
 # Development
 dev: ## Start local development environment with Docker
-	@echo "🚀 Setting up AviationWX Bridge development environment..."
+	@echo "🚀 Setting up AviationWX.org Bridge development environment..."
 	@mkdir -p docker/data
 	@if [ ! -f docker/data/config.json ]; then \
 		echo '{"version":2,"timezone":"America/Chicago","cameras":[],"web_console":{"enabled":true,"port":1229,"password":"aviationwx"}}' > docker/data/config.json; \
@@ -71,17 +71,17 @@ dev: ## Start local development environment with Docker
 	docker compose -f docker/docker-compose.yml up -d
 	@echo ""
 	@echo "╔══════════════════════════════════════════════════════════════╗"
-	@echo "║           AviationWX Bridge - Development Mode               ║"
+	@echo "║           AviationWX.org Bridge - Development Mode           ║"
 	@echo "╠══════════════════════════════════════════════════════════════╣"
-	@echo "║                                                               ║"
+	@echo "║                                                              ║"
 	@echo "║  Web Console: http://localhost:1229                          ║"
-	@echo "║  Password:    aviationwx                                      ║"
-	@echo "║                                                               ║"
-	@echo "║  Commands:                                                    ║"
+	@echo "║  Password:    aviationwx                                     ║"
+	@echo "║                                                              ║"
+	@echo "║  Commands:                                                   ║"
 	@echo "║    make docker-logs    - View logs                           ║"
 	@echo "║    make docker-down    - Stop container                      ║"
 	@echo "║    make dev            - Rebuild and restart                 ║"
-	@echo "║                                                               ║"
+	@echo "║                                                              ║"
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 
 dev-clean: docker-down ## Stop and clean development environment

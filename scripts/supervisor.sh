@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# AviationWX Bridge - Update Supervisor
+# AviationWX.org Bridge - Update Supervisor
 # https://github.com/alexwitherspoon/AviationWX.org-Bridge
 #
-# This script manages automatic updates for AviationWX Bridge.
+# This script manages automatic updates for AviationWX.org Bridge.
 # It is installed by install.sh and runs via systemd timer.
 #
 # Version: 1 (increment only for breaking changes to this script)
@@ -298,7 +298,7 @@ EOF
 
 # Show status
 show_status() {
-    echo "AviationWX Bridge Supervisor Status"
+    echo "AviationWX.org Bridge Supervisor Status"
     echo "===================================="
     echo ""
     echo "Current version: $(get_current_version)"

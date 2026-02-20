@@ -1,5 +1,5 @@
 /**
- * AviationWX Bridge - Web Console
+ * AviationWX.org Bridge - Web Console
  * Frontend JavaScript application
  */
 
@@ -1177,7 +1177,7 @@ async function saveGlobalSettings() {
 
 // Setup Wizard
 function showSetupWizard() {
-    showModal('Welcome to AviationWX Bridge', `
+    showModal('Welcome to AviationWX.org Bridge', `
         <div class="form-section">
             <p style="margin-bottom: var(--space-lg);">
                 Let's set up your first camera! You'll need:

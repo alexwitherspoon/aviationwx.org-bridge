@@ -1,11 +1,18 @@
 # Changelog
 
-All notable changes to AviationWX Bridge will be documented in this file.
+All notable changes to AviationWX.org Bridge will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.4.1] - 2026-02-20
+
+### Changed
+- **Display name consistency**: "AviationWX Bridge" → "AviationWX.org Bridge" across release titles, docs, web UI, and scripts
+- **Supervisor**: Use `grep -F` for literal image name match (avoids regex `.` matching any char)
+- **ASCII banners**: Fix spacing/alignment in Makefile, install.sh, test-ci-local.sh, aviationwx-recovery.sh
 
 ## [2.4.0] - 2026-02-20
 
@@ -249,7 +256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ⚠️ **Known Issue**: Multi-arch Docker images contain incorrect binaries (fixed in v1.0.1)
 
-First production release of AviationWX Bridge! 🎉
+First production release of AviationWX.org Bridge! 🎉
 
 This release represents a complete, production-ready weather camera bridge for aviationwx.org with comprehensive features for camera management, image processing, queue management, and automatic updates.
 

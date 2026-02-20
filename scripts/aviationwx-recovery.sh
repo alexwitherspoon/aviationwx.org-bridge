@@ -1,5 +1,5 @@
 #!/bin/bash
-# AviationWX Bridge - Emergency Recovery Tool
+# AviationWX.org Bridge - Emergency Recovery Tool
 # Version: 2.0
 
 set -euo pipefail
@@ -17,8 +17,8 @@ show_menu() {
     clear
     cat <<EOF
 ╔════════════════════════════════════════════════════════════════╗
-║           AviationWX Bridge - Emergency Recovery               ║
-║                        Version $VERSION                           ║
+║           AviationWX.org Bridge - Emergency Recovery           ║
+║                        Version $VERSION                        ║
 ╚════════════════════════════════════════════════════════════════╝
 
 Current Status:

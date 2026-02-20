@@ -1,4 +1,4 @@
-# AviationWX Bridge - Maintenance Guide
+# AviationWX.org Bridge - Maintenance Guide
 
 This guide covers maintenance procedures for contributors and maintainers.
 

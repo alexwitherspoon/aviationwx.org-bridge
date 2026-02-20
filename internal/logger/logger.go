@@ -1,4 +1,4 @@
-// Package logger provides structured logging for AviationWX Bridge
+// Package logger provides structured logging for AviationWX.org Bridge
 package logger
 
 import (

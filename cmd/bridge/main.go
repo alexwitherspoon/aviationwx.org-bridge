@@ -121,7 +121,7 @@ func main() {
 	logger.Init()
 	log := logger.Default()
 
-	log.Info("AviationWX Bridge starting",
+	log.Info("AviationWX.org Bridge starting",
 		"version", Version,
 		"commit", GitCommit,
 		"pid", os.Getpid())

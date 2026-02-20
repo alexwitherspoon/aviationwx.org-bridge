@@ -1,6 +1,6 @@
 # Code Style Guide
 
-This document outlines coding standards and development practices for AviationWX Bridge. All contributors should follow these guidelines.
+This document outlines coding standards and development practices for AviationWX.org Bridge. All contributors should follow these guidelines.
 
 **Important**: This is a **safety-critical application** used by pilots for flight decisions. Code quality, reliability, and graceful degradation are paramount.
 

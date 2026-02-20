@@ -1,5 +1,5 @@
 #!/bin/bash
-# Daily restart script for AviationWX Bridge
+# Daily restart script for AviationWX.org Bridge
 # Add to crontab: 0 3 * * * /opt/aviationwx/daily-restart.sh >> /var/log/aviationwx-restart.log 2>&1
 
 set -e

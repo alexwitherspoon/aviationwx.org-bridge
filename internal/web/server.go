@@ -118,7 +118,7 @@ func (s *Server) authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Use constant-time comparison to prevent timing attacks
 		passwordMatch := subtle.ConstantTimeCompare([]byte(password), []byte(expectedPassword)) == 1
 		if !ok || !passwordMatch {
-			w.Header().Set("WWW-Authenticate", `Basic realm="AviationWX Bridge"`)
+			w.Header().Set("WWW-Authenticate", `Basic realm="AviationWX.org Bridge"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

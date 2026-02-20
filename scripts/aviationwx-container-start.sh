@@ -1,5 +1,5 @@
 #!/bin/bash
-# AviationWX Bridge - Container Startup
+# AviationWX.org Bridge - Container Startup
 # Started by systemd after boot-update completes
 # Version: 2.0
 # Features: Dynamic resource limits based on system capabilities
