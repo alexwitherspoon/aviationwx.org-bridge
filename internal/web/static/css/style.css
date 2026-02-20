@@ -1047,6 +1047,26 @@ select.form-control {
     color: var(--color-error);
 }
 
+/* Camera test preview */
+.camera-test-result {
+    margin-top: var(--space-md);
+}
+
+.camera-preview {
+    margin-top: var(--space-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    max-width: 100%;
+}
+
+.camera-preview img {
+    display: block;
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .nav {

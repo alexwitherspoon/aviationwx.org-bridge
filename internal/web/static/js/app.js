@@ -701,6 +701,9 @@ function getCameraFormHtml(cam = null) {
                            min="1" max="1800" required>
                     <p class="form-help">How often to capture images (1 second to 30 minutes)</p>
                 </div>
+                
+                <button type="button" class="btn" onclick="testCamera()">Test Snapshot</button>
+                <div id="cameraTestResult" class="camera-test-result"></div>
             </div>
             
             <div class="form-section">
@@ -973,6 +976,72 @@ async function deleteCamera(id) {
     }
 }
 
+let lastCameraPreviewUrl = null;
+
+async function testCamera() {
+    const resultDiv = document.getElementById('cameraTestResult');
+    if (lastCameraPreviewUrl) {
+        URL.revokeObjectURL(lastCameraPreviewUrl);
+        lastCameraPreviewUrl = null;
+    }
+    resultDiv.innerHTML = '<div class="test-result" style="background: var(--color-bg)">Testing snapshot...</div>';
+    resultDiv.className = 'camera-test-result';
+
+    const camera = buildCameraConfigFromForm();
+    if (!camera) {
+        resultDiv.innerHTML = '<div class="test-result error">✗ Please fill in camera type and required fields</div>';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/test/camera', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(camera),
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            lastCameraPreviewUrl = url;
+            resultDiv.innerHTML = `
+                <div class="test-result success">✓ Snapshot successful!</div>
+                <div class="camera-preview">
+                    <img src="${url}" alt="Camera preview">
+                </div>
+            `;
+        } else {
+            const errorText = await response.text();
+            const msg = errorText.replace(/^Test failed: /, '').trim();
+            resultDiv.innerHTML = `<div class="test-result error">✗ ${msg || 'Snapshot failed'}</div>`;
+        }
+    } catch (err) {
+        resultDiv.innerHTML = `<div class="test-result error">✗ ${err.message}</div>`;
+    }
+}
+
+function buildCameraConfigFromForm() {
+    const type = document.getElementById('camType')?.value;
+    if (!type) return null;
+
+    const values = {
+        type,
+        id: document.getElementById('camId')?.value,
+        snapshot_url: document.getElementById('camSnapshotUrl')?.value,
+        auth_user: document.getElementById('camAuthUser')?.value,
+        auth_pass: document.getElementById('camAuthPass')?.value,
+        rtsp_url: document.getElementById('camRtspUrl')?.value,
+        rtsp_user: document.getElementById('camRtspUser')?.value,
+        rtsp_pass: document.getElementById('camRtspPass')?.value,
+        onvif_endpoint: document.getElementById('camOnvifEndpoint')?.value,
+        onvif_user: document.getElementById('camOnvifUser')?.value,
+        onvif_pass: document.getElementById('camOnvifPass')?.value,
+        onvif_profile: document.getElementById('camOnvifProfile')?.value,
+    };
+    return window.buildCameraConfigFromFormValues(values);
+}
+
 async function testUpload() {
     const resultDiv = document.getElementById('uploadTestResult');
     resultDiv.innerHTML = '<div class="test-result" style="background: var(--color-bg)">Testing connection...</div>';
@@ -1167,6 +1236,10 @@ function showModal(title, content) {
 }
 
 function closeModal() {
+    if (lastCameraPreviewUrl) {
+        URL.revokeObjectURL(lastCameraPreviewUrl);
+        lastCameraPreviewUrl = null;
+    }
     document.getElementById('modal').style.display = 'none';
 }
 

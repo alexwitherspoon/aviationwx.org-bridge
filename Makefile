@@ -15,8 +15,11 @@ help: ## Show this help message
 build: ## Build the Go binary
 	go build -o bin/bridge ./cmd/bridge
 
-test: ## Run tests
+test: ## Run Go tests
 	go test -v -race -coverprofile=coverage.out ./...
+
+test-js: ## Run frontend JS tests
+	node --test internal/web/static/js/form-utils.test.js
 
 test-coverage: test ## Run tests with coverage report
 	go tool cover -html=coverage.out -o coverage.html
@@ -85,4 +88,4 @@ dev-clean: docker-down ## Stop and clean development environment
 	rm -rf docker/data
 	@echo "✓ Development environment cleaned"
 
-check: fmt vet test ## Run all checks (format, vet, test)
+check: fmt vet test test-js ## Run all checks (format, vet, Go tests, JS tests)

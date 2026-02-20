@@ -354,7 +354,11 @@
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
+    <script type="module">
+        import { buildCameraConfigFromFormValues } from '/js/form-utils.js';
+        window.buildCameraConfigFromFormValues = buildCameraConfigFromFormValues;
+    </script>
+    <script src="/js/app.js" defer></script>
 </body>
 </html>
 
