@@ -80,9 +80,9 @@ docker/data/  # Runtime configuration and state - do not commit
 .env.*.local
 
 # AI-specific configuration files (keep local only, never commit)
-.cursorrules
 .cursor/
 *.cursorrules
+!.cursorrules
 .cursorrc
 .cursor-settings.json
 
