@@ -7,16 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-02-20
+
 ### Added
-- **Safety-Critical EXIF Tests**: Comprehensive test coverage for aviation safety
-  - `TestEXIF_UTCEnforcement` - Validates UTC timestamps across 6 timezones
-  - `TestEXIF_MarkerValidation` - Validates "AviationWX-Bridge:UTC:v1" marker format
-  - `TestEXIF_NTPFailureHandling` - Tests NTP unhealthy scenarios with proper warnings
-  - `TestEXIF_TimeInFuture` - Tests camera clock error detection and rejection
-  - Increased `internal/time` coverage from 84.6% to 85.4%
-- **Test Coverage Analysis**: Comprehensive documentation of test coverage and safety-critical paths
-  - `TEST_COVERAGE_ANALYSIS.md` - Detailed coverage analysis by package with priority matrix
-  - `TEST_IMPLEMENTATION_SUMMARY.md` - Production readiness assessment and recommendations
+- **Test Snapshot UI**: Test camera configuration before saving
+  - "Test Snapshot" button in Add/Edit Camera modal
+  - Live preview of captured image; validates HTTP/RTSP/ONVIF config
+  - Extracted `form-utils.js` with `buildCameraConfigFromFormValues` for testability
+  - Node built-in test runner for frontend form logic
+- **SFTP Mutex**: Serialize Upload and TestConnection per SFTPClient to prevent race conditions
+- **Scheduler Panic Recovery**: Wrap upload worker in defer/recover; log panic and stack, treat as failure
+- **Watchdog Bridge Check**: Script checks bridge process and web console before restarting services
+- **GitHub Copilot Instructions**: Repository-wide `.github/copilot-instructions.md` for Copilot context
+
+### Fixed
+- Concurrent SFTP uploads could race; mutex ensures safe reuse of client
+
+### Testing
+- `TestHandleTestCamera` and `TestHandleTestUpload` for web API
+- `TestBridge_testCamera` unit tests (success, capture error, create error)
+- Integration test: `POST /api/test/camera` with TestCamera mock
+- Frontend: 12 unit tests for `buildCameraConfigFromFormValues`
+
+### Documentation
+- README: Replace 2 screenshots with 5 full-size screenshots (Dashboard, Cameras, Add Camera, Settings, Logs)
 
 ## [2.0.1] - 2026-01-18
 
