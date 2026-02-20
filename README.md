@@ -1,10 +1,10 @@
-# AviationWX Bridge
+# AviationWX.org Bridge
 
 Remote bridge device for capturing webcam snapshots and uploading them to AviationWX.org. Designed for Raspberry Pi Zero 2 W and other embedded devices.
 
 ## Overview
 
-AviationWX Bridge is a lightweight daemon that:
+AviationWX.org Bridge is a lightweight daemon that:
 - Captures webcam snapshots from local network cameras (HTTP, ONVIF, RTSP)
 - Queues images locally with accurate observation timestamps
 - Uploads to `upload.aviationwx.org` via SFTP (recommended) or FTPS
@@ -32,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Brid
 **This script will:**
 1. Install Docker (if not already installed)
 2. Install a lightweight update supervisor
-3. Pull and start the AviationWX Bridge container
+3. Pull and start the AviationWX.org Bridge container
 4. Configure automatic security updates
 5. Set up automatic restart on boot
 
@@ -185,7 +185,7 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     AviationWX Bridge                       │
+│                     AviationWX.org Bridge                       │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │   Camera    │  │   Camera    │  │    Web Console      │  │
