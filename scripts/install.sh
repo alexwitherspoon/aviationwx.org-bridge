@@ -391,11 +391,15 @@ bootstrap_container() {
     
     log_info "Running initial boot-update..."
     
-    # Initialize last-known-good to latest
+    # Initialize last-known-good to latest (container-start uses this)
     echo "latest" > "${DATA_DIR}/last-known-good.txt"
     
-    # Run boot-update
-    /usr/local/bin/aviationwx-supervisor.sh boot-update
+    # Run boot-update (may fail to parse release; that's ok - we use "latest")
+    /usr/local/bin/aviationwx-supervisor.sh boot-update || true
+    
+    # Start container (boot-update doesn't start it; container-start does)
+    log_info "Starting bridge container..."
+    /usr/local/bin/aviationwx-container-start.sh
     
     # Wait for container to be healthy
     log_info "Waiting for bridge to start..."

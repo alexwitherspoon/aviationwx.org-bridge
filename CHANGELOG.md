@@ -10,8 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Boot-update**: Add `min_host_version` to release metadata (fixes "No min_host_version" on fresh install)
 - **Boot-update**: Fallback to `/releases` list when `/releases/latest` 404s (GitHub API issue with dots in repo names)
+- **Boot-update**: Use lowercase repo path for GitHub API (aviationwx.org-bridge)
 - **Boot-update**: Fallback tag parsing from `name` field when `jq` extraction fails
 - **Install banner**: Fix alignment of https://aviationwx.org line
+- **Install bootstrap**: Run container-start after boot-update so container actually starts (boot-update only updates version)
 
 ## [2.4.1] - 2026-02-20
 
