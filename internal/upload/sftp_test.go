@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -127,6 +128,34 @@ func TestNewSFTPClient_WithBasePath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSFTPClient_ConcurrentUploads(t *testing.T) {
+	// SFTPClient uses a mutex to serialize access. Concurrent calls must not race.
+	// This test verifies that many goroutines calling Upload (which will fail to connect)
+	// complete without panic or data race. Run with: go test -race
+	// Use .invalid TLD (RFC 6761) - reserved for invalid names, never resolves.
+	// Short timeout so connection attempts fail quickly.
+	client, err := NewSFTPClient(Config{
+		Host:                  "test.invalid",
+		Port:                  22,
+		Username:              "test",
+		Password:              "test",
+		TimeoutConnectSeconds: 1,
+	})
+	if err != nil {
+		t.Fatalf("NewSFTPClient: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = client.Upload("test/path.jpg", []byte("data"))
+		}()
+	}
+	wg.Wait()
 }
 
 func TestSFTPClient_Close(t *testing.T) {

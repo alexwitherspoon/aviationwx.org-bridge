@@ -3,14 +3,17 @@ package upload
 import (
 	"fmt"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
-// SFTPClient implements the Client interface using SFTP protocol
+// SFTPClient implements the Client interface using SFTP protocol.
+// Safe for concurrent use: a mutex serializes Upload and TestConnection per client.
 type SFTPClient struct {
+	mu         sync.Mutex
 	config     Config
 	sshClient  *ssh.Client
 	sftpClient *sftp.Client
@@ -38,15 +41,14 @@ func NewSFTPClient(cfg Config) (*SFTPClient, error) {
 
 // Upload uploads a file via SFTP with atomic write (tmp + rename)
 func (c *SFTPClient) Upload(remotePath string, data []byte) error {
-	start := time.Now()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	// Connect
 	if err := c.connect(); err != nil {
 		return fmt.Errorf("connection failed: %w", err)
 	}
 	defer func() { _ = c.Close() }() // Best-effort cleanup
-
-	fileSize := int64(len(data))
 
 	// Normalize remote path and prepend base path
 	// Use path.Join (not filepath.Join) because SFTP always uses forward slashes
@@ -85,17 +87,14 @@ func (c *SFTPClient) Upload(remotePath string, data []byte) error {
 		return fmt.Errorf("rename failed: %w", err)
 	}
 
-	duration := time.Since(start)
-	speedKBps := float64(fileSize) / duration.Seconds() / 1024
-
-	// Note: Logging is handled by the scheduler layer
-	_ = speedKBps // Avoid unused variable warning
-
 	return nil
 }
 
 // TestConnection tests the SFTP connection and authentication
 func (c *SFTPClient) TestConnection() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if err := c.connect(); err != nil {
 		return err
 	}
