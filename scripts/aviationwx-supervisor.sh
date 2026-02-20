@@ -59,21 +59,19 @@ execute_action() {
 
 check_host_scripts_update() {
     log_event "INFO" "Checking for host scripts update (current: v$SCRIPT_VERSION)"
-    
+
     local release_json
     release_json=$(get_latest_release_json) || return 1
-    
-    # Extract min_host_version from metadata
+
     local required_host_version
-    required_host_version=$(echo "$release_json" | \
-        grep -oP '(?<="min_host_version": ")[^"]*' | head -1)
+    required_host_version=$(echo "$release_json" | jq -r '.body // ""' 2>/dev/null | \
+        grep -oE '"min_host_version": "[0-9.]+"' | head -1 | grep -oE '[0-9]+\.[0-9]+')
     
     if [ -z "$required_host_version" ]; then
         log_event "INFO" "No min_host_version in release metadata"
         return 1
     fi
     
-    # Compare versions
     if version_less_than "$SCRIPT_VERSION" "$required_host_version"; then
         log_event "INFO" "Host scripts update required: v$SCRIPT_VERSION → v$required_host_version"
         return 0
@@ -170,8 +168,7 @@ get_current_version() {
 get_latest_release_json() {
     local cache_file="${DATA_DIR}/release-cache.json"
     local cache_max_age=3600
-    
-    # Check cache
+
     if [ -f "$cache_file" ]; then
         local age
         age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
@@ -180,44 +177,31 @@ get_latest_release_json() {
             return 0
         fi
     fi
-    
-    # Fetch from GitHub with retry
+
     local attempt=0
-    local max_attempts=3
-    
-    while [ $attempt -lt $max_attempts ]; do
-        local release_json
-        # Try /releases/latest first
-        release_json=$(curl -sf --max-time 10 \
+    while [ $attempt -lt 3 ]; do
+        local raw
+        raw=$(curl -sf --max-time 10 \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" 2>/dev/null)
-        # Fallback: use list endpoint - /releases/latest can 404 for repo names with dots
-        if [ -z "$release_json" ] || [ "$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)" = "" ]; then
-            local releases_list
-            releases_list=$(curl -sf --max-time 10 \
-                -H "Accept: application/vnd.github.v3+json" \
-                "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=5" 2>/dev/null)
-            if [ -n "$releases_list" ]; then
-                release_json=$(echo "$releases_list" | jq -c '[.[] | select(.prerelease == false)][0] // .[0]' 2>/dev/null)
+            "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=1" 2>/dev/null)
+        if [ -n "$raw" ]; then
+            local release_json
+            release_json=$(echo "$raw" | jq -c '.[0] // empty' 2>/dev/null)
+            if [ -n "$release_json" ] && [ "$release_json" != "null" ]; then
+                echo "$release_json" > "$cache_file"
+                echo "$release_json"
+                return 0
             fi
         fi
-        if [ -n "$release_json" ] && [ "$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)" != "" ]; then
-            echo "$release_json" > "$cache_file"
-            echo "$release_json"
-            return 0
-        fi
-        
         attempt=$((attempt + 1))
         sleep 5
     done
-    
-    # Fallback to stale cache
+
     if [ -f "$cache_file" ]; then
         log_event "WARN" "GitHub API unavailable, using stale cache"
         cat "$cache_file"
         return 0
     fi
-    
     log_event "ERROR" "Cannot fetch releases (GitHub API down, no cache)"
     return 1
 }
@@ -236,78 +220,60 @@ get_update_channel() {
 
 determine_target_version() {
     local channel="$1"
-    
+
     log_event "INFO" "Determining target version for channel: $channel" >&2
-    
+
     local release_json
     release_json=$(get_latest_release_json) || return 1
-    
+
     if [ "$channel" = "edge" ]; then
         log_event "INFO" "Using edge channel" >&2
         echo "edge"
     else
         local tag_name
         tag_name=$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)
-        
-        if [ -z "$tag_name" ]; then
-            # Fallback: extract from name field (e.g. "AviationWX.org Bridge v2.4.1") or body
-            tag_name=$(echo "$release_json" | jq -r '.name // empty' 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        fi
-        if [ -z "$tag_name" ]; then
-            tag_name=$(echo "$release_json" | grep -oE '"tag_name"[[:space:]]*:[[:space:]]*"v[0-9]+\.[0-9]+\.[0-9]+"' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        fi
         if [ -z "$tag_name" ]; then
             log_event "ERROR" "Cannot parse release tag" >&2
             return 1
         fi
-        
-        # Check if pre-release
+
         if [ "$SKIP_PRERELEASE" = true ]; then
             local is_prerelease
-            is_prerelease=$(echo "$release_json" | jq -r '.prerelease // false')
+            is_prerelease=$(echo "$release_json" | jq -r '.prerelease // false' 2>/dev/null)
             if [ "$is_prerelease" = "true" ]; then
                 log_event "WARN" "Latest release is pre-release, skipping" >&2
                 return 1
             fi
         fi
-        
-        # Check release age (skip on watchdog-triggered boot)
+
         if [ "${BOOT_MODE:-}" != "watchdog" ]; then
             local published_at
-            published_at=$(echo "$release_json" | jq -r '.published_at // empty')
-            
+            published_at=$(echo "$release_json" | jq -r '.published_at // empty' 2>/dev/null)
             if [ -n "$published_at" ]; then
-                local published_epoch
+                local published_epoch now_epoch age_hours
                 published_epoch=$(date -d "$published_at" +%s 2>/dev/null || echo 0)
-                local now_epoch
                 now_epoch=$(date +%s)
-                local age_hours=$(( (now_epoch - published_epoch) / 3600 ))
-                
-                # Allow override via environment variable for testing/emergency updates
+                age_hours=$(( (now_epoch - published_epoch) / 3600 ))
                 if [ "${AVIATIONWX_SKIP_AGE_CHECK:-false}" != "true" ] && [ $age_hours -lt $MIN_RELEASE_AGE_HOURS ]; then
                     log_event "INFO" "Release too recent: $tag_name (${age_hours}h old). Use 'force-update' or AVIATIONWX_SKIP_AGE_CHECK=true to override" >&2
                     return 1
                 fi
             fi
         fi
-        
-        # Return version WITHOUT 'v' prefix (Docker images use 2.0.1, not v2.0.1)
+
         echo "${tag_name#v}"
     fi
 }
 
 is_version_deprecated() {
     local version="$1"
-    
+
     local release_json
     release_json=$(get_latest_release_json) || return 1
-    
+
     local deprecated_versions
-    deprecated_versions=$(echo "$release_json" | \
-        grep -oP '(?<="deprecates": \[)[^\]]*' | \
-        tr ',' '\n' | \
-        tr -d '"[]' | \
-        xargs)
+    deprecated_versions=$(echo "$release_json" | jq -r '.body // ""' 2>/dev/null | \
+        grep -oE '"deprecates": \[[^\]]*\]' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | tr '\n' ' ')
     
     if echo "$deprecated_versions" | grep -qw "$version"; then
         log_event "WARN" "Version $version is deprecated"
@@ -396,9 +362,8 @@ check_release_workflow_status() {
         "https://api.github.com/repos/${GITHUB_REPO}/releases/tags/v${version}" 2>/dev/null)
     
     if [ -n "$release_exists" ]; then
-        # Release exists, check if it's recent (within last 15 minutes)
         local published_at
-        published_at=$(echo "$release_exists" | jq -r '.published_at // empty')
+        published_at=$(echo "$release_exists" | jq -r '.published_at // empty' 2>/dev/null)
         
         if [ -n "$published_at" ]; then
             local published_epoch
@@ -678,11 +643,10 @@ boot_update() {
     
     # Step 1: Check if host scripts need update
     if check_host_scripts_update; then
-        local release_json
+        local release_json tag_name required_version
         release_json=$(get_latest_release_json)
-        local required_version
-        required_version=$(echo "$release_json" | \
-            grep -oP '(?<="min_host_version": ")[^"]*' | head -1)
+        tag_name=$(echo "$release_json" | jq -r '.tag_name // empty' 2>/dev/null)
+        required_version="${tag_name#v}"
         
         if update_host_scripts "$required_version"; then
             log_event "INFO" "Host scripts updated, re-running supervisor"
@@ -694,7 +658,7 @@ boot_update() {
     # Step 2: Check if last boot was watchdog-triggered
     if [ -f "${DATA_DIR}/last-reboot-reason.json" ]; then
         local reboot_reason
-        reboot_reason=$(jq -r '.reboot_reason // "unknown"' "${DATA_DIR}/last-reboot-reason.json")
+        reboot_reason=$(jq -r '.reboot_reason // "unknown"' "${DATA_DIR}/last-reboot-reason.json" 2>/dev/null)
         if [ "$reboot_reason" = "watchdog" ]; then
             log_event "INFO" "Watchdog triggered last boot (potential crash loop)"
             export BOOT_MODE="watchdog"

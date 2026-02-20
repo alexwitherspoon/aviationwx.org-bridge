@@ -103,6 +103,25 @@ install_docker() {
     log_success "Docker installed successfully"
 }
 
+# Install jq if not present (JSON parsing for config, release metadata, daemon merge)
+install_jq() {
+    if command -v jq &> /dev/null; then
+        log_success "jq is already installed"
+        return 0
+    fi
+    log_info "Installing jq..."
+    case $OS in
+        raspbian|debian|ubuntu)
+            apt-get update -qq && apt-get install -y -qq jq
+            ;;
+        *)
+            log_error "Please install jq manually: https://stedolan.github.io/jq/download/"
+            exit 1
+            ;;
+    esac
+    log_success "jq installed"
+}
+
 # Configure Docker logging for SD card protection (Raspberry Pi)
 configure_docker_logging() {
     log_info "Configuring Docker logging for SD card protection..."
@@ -142,18 +161,11 @@ EOF
 EOF
             log_success "Created Docker daemon.json with journald logging"
         else
-            # Merge with existing config using jq
             log_info "Merging journald config into existing daemon.json"
-            
-            # Backup existing config
             cp /etc/docker/daemon.json /etc/docker/daemon.json.backup
-            
-            # Merge configs
-            jq '. + {"log-driver": "journald", "log-opts": {"tag": "{{.Name}}"}}' \
-                /etc/docker/daemon.json > /etc/docker/daemon.json.tmp
-            
-            # Validate JSON
-            if jq empty /etc/docker/daemon.json.tmp 2>/dev/null; then
+            if jq '. + {"log-driver": "journald", "log-opts": {"tag": "{{.Name}}"}}' \
+                /etc/docker/daemon.json > /etc/docker/daemon.json.tmp 2>/dev/null && \
+                jq empty /etc/docker/daemon.json.tmp 2>/dev/null; then
                 mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
                 log_success "Merged journald config into daemon.json (backup saved)"
             else
@@ -533,6 +545,7 @@ main() {
     check_root
     detect_os
     install_docker
+    install_jq
     configure_docker_logging
     setup_data_dir
     install_host_scripts

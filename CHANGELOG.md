@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Boot-update**: Use `/releases?per_page=1` instead of `/releases/latest` (avoids 404 for repo names with dots)
+- **Boot-update**: Use jq for release metadata parsing (tag_name, prerelease, published_at, min_host_version)
+
+### Added
+- **Install**: Add `install_jq` so jq is available for boot-update and recovery scripts
+
 ## [2.5.0] - 2026-02-20
 
 ### Changed
