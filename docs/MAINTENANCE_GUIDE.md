@@ -224,7 +224,7 @@ systemctl enable aviationwx-new-monitor.service  # NEW
    ```
 
 2. **GitHub Release:**
-   - Use `docs/RELEASE_TEMPLATE.md` structure
+   - Use `docs/releases/RELEASE_TEMPLATE.md` structure
    - Include `AVIATIONWX_METADATA` JSON
    - Mark deprecated releases if needed
 
