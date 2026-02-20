@@ -9,6 +9,8 @@ readonly WATCHDOG_VERSION="2.0"
 readonly STATE_FILE="/data/aviationwx/watchdog-state.json"
 readonly LOG_FILE="/data/aviationwx/watchdog.log"
 readonly DATA_DIR="/data/aviationwx"
+readonly CONTAINER_NAME="aviationwx-bridge"
+readonly CONTAINER_START_SCRIPT="/usr/local/bin/aviationwx-container-start.sh"
 
 # Progressive escalation over 30 minutes
 readonly CHECK_INTERVAL=60
@@ -216,6 +218,26 @@ check_temperature() {
     fi
 }
 
+check_bridge_container() {
+    # If bridge container has exited (e.g. panic, OOM), restart it
+    local status
+    status=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "missing")
+
+    if [ "$status" = "exited" ] || [ "$status" = "missing" ]; then
+        log_event "ERROR" "Bridge container $status, restarting"
+        if systemctl is-active --quiet aviationwx-container.service 2>/dev/null; then
+            execute_action "Restart bridge container" "systemctl restart aviationwx-container.service"
+        else
+            # Fallback: run container-start script directly (e.g. manual Docker install)
+            if [ -x "$CONTAINER_START_SCRIPT" ]; then
+                execute_action "Start bridge container" "$CONTAINER_START_SCRIPT"
+            else
+                log_event "ERROR" "Cannot restart: aviationwx-container.service and $CONTAINER_START_SCRIPT not available"
+            fi
+        fi
+    fi
+}
+
 check_disk() {
     local usage
     usage=$(df "$DATA_DIR" 2>/dev/null | tail -1 | awk '{print $5}' | sed 's/%//' || echo "0")
@@ -330,6 +352,7 @@ main() {
     check_ntp
     check_network
     check_docker
+    check_bridge_container
     check_temperature
     check_disk
     
