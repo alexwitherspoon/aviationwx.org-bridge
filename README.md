@@ -273,7 +273,7 @@ docker rm aviationwx-bridge
 
 ## Documentation
 
-- **[Local Development](docs/LOCAL_SETUP.md)** - Development environment setup
+- **[Development](docs/DEVELOPMENT.md)** - Build, test, run locally
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment details
 - **[Queue & Memory Management](docs/QUEUE_STORAGE.md)** - How storage and memory are managed
 - **[Config Reference](docs/CONFIG_SCHEMA.md)** - Full configuration options

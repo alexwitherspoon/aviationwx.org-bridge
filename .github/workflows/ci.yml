@@ -75,7 +75,7 @@ jobs:
             "README.md"
             "LICENSE"
             "docs/CONFIG_SCHEMA.md"
-            "docs/LOCAL_TESTING.md"
+            "docs/DEVELOPMENT.md"
           )
           for file in "${required_files[@]}"; do
             if [ ! -f "$file" ]; then

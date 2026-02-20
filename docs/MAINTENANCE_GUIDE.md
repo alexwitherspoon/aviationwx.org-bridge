@@ -210,7 +210,7 @@ systemctl enable aviationwx-new-monitor.service  # NEW
 - [ ] All tests pass: `go test ./...`
 - [ ] CI passes: Check GitHub Actions
 - [ ] Docker builds: `cd docker && docker compose up --build`
-- [ ] Local testing complete: See `docs/LOCAL_TESTING.md`
+- [ ] Local testing complete: See `docs/DEVELOPMENT.md`
 - [ ] CHANGELOG.md updated with all changes
 - [ ] Version bumped in relevant files
 - [ ] Deprecated components added to cleanup lists
