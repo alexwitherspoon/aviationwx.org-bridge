@@ -211,6 +211,14 @@ jobs:
             docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:${{ steps.version.outputs.VERSION_NUM }}
             ```
             
+            ### Migration (from aviationwx-bridge)
+            
+            The repo was renamed to AviationWX.org-Bridge. GHCR does not redirect—you must switch to the new image path.
+            
+            **Raspberry Pi:** Re-run the install script above (idempotent; preserves config).
+            
+            **Docker:** Stop and remove the old container, then pull and run from `ghcr.io/alexwitherspoon/AviationWX.org-Bridge` (see Installation).
+            
             ### Docker Images
             
             Available at `ghcr.io/alexwitherspoon/AviationWX.org-Bridge`:
