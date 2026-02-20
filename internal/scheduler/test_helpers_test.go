@@ -36,3 +36,14 @@ func (m *mockUploader) Upload(remotePath string, data []byte) error {
 func (m *mockUploader) TestConnection() error {
 	return m.err
 }
+
+// panicUploader panics on Upload to test panic recovery
+type panicUploader struct{}
+
+func (p *panicUploader) Upload(remotePath string, data []byte) error {
+	panic("panicUploader: intentional panic for testing")
+}
+
+func (p *panicUploader) TestConnection() error {
+	return nil
+}

@@ -338,6 +338,83 @@ func TestUploadWorker_ConfigDefaults(t *testing.T) {
 	}
 }
 
+// TestUploadWithRetry_PanicRecovery verifies that a panic in the uploader does not crash the process.
+func TestUploadWithRetry_PanicRecovery(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	queueMgr, err := queue.NewManager(queue.GlobalQueueConfig{
+		BasePath:           tmpDir,
+		MaxTotalSizeMB:     10,
+		MaxHeapMB:          50,
+		MemoryCheckSeconds: 60,
+		EmergencyThinRatio: 0.5,
+	}, nil)
+	if err != nil {
+		t.Fatalf("NewManager: %v", err)
+	}
+	q, err := queueMgr.CreateQueue("panic-cam", queue.DefaultQueueConfig())
+	if err != nil {
+		t.Fatalf("CreateQueue: %v", err)
+	}
+
+	imageData := minimalTestJPEG()
+	ts := time.Now().UTC()
+	if err := q.Enqueue(imageData, ts, "bridge_clock", "high"); err != nil {
+		t.Fatalf("Enqueue: %v", err)
+	}
+
+	worker := NewUploadWorker(UploadWorkerConfig{
+		MaxConcurrent:      1,
+		MinUploadInterval:  time.Millisecond,
+		AuthBackoff:        time.Second,
+		RetryDelay:         10 * time.Millisecond,
+		ConnectionInterval: time.Millisecond,
+	})
+	worker.AddQueue("panic-cam", q, CameraConfig{ID: "panic-cam", RemotePath: "test", Enabled: true}, &panicUploader{})
+
+	worker.Start()
+	defer worker.Stop()
+
+	// Poll for upload attempt and failure (worker ticks every second)
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		stats := worker.GetStats()
+		if stats.UploadsTotal >= 1 && stats.UploadsFailed >= 1 {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	stats := worker.GetStats()
+	if stats.UploadsTotal < 1 {
+		t.Errorf("Expected at least 1 upload attempt within 5s, got %d", stats.UploadsTotal)
+	}
+	if stats.UploadsFailed < 1 {
+		t.Errorf("Expected panic reported as failure within 5s, got UploadsFailed=%d", stats.UploadsFailed)
+	}
+}
+
+// minimalTestJPEG returns a minimal valid JPEG (>= 100 bytes) for queue Enqueue validation.
+// Matches the format used in internal/queue/queue_test.go createTestJPEG.
+func minimalTestJPEG() []byte {
+	return []byte{
+		0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00,
+		0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+		0xFF, 0xDB, 0x00, 0x43, 0x00,
+		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+		0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+		0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00,
+		0xFF, 0xC4, 0x00, 0x1F, 0x00,
+		0x00, 0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+		0x08, 0x09, 0x0A, 0x0B,
+		0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F, 0x00,
+		0x7F, 0xFF, 0xD9,
+	}
+}
+
 // TestReadImageFile tests the readImageFile helper function
 func TestReadImageFile(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "test-read-image-*")

@@ -321,35 +321,43 @@ func (w *UploadWorker) uploadWorkerRoutine(workerID int, workChan <-chan uploadT
 		w.activeUploads++
 		w.mu.Unlock()
 
-		// Perform upload with retry
-		success := w.uploadWithRetry(task.cameraID, task.uploader, task.image, task.remotePath)
+		// Panic recovery: uploadWithRetry can panic (e.g. nil deref in SFTP).
+		// Log and treat as failure; cleanup always runs.
+		func() {
+			defer func() {
+				// Cleanup: must run even on panic
+				w.inFlightMu.Lock()
+				delete(w.inFlight, task.image.FilePath)
+				w.inFlightMu.Unlock()
+				w.mu.Lock()
+				w.activeUploads--
+				w.mu.Unlock()
 
-		if success {
-			// Mark as uploaded (removes from queue)
-			if err := task.queue.MarkUploaded(task.image); err != nil {
-				w.logger.Error("Failed to mark uploaded",
-					"worker", workerID,
-					"camera", task.cameraID,
-					"error", err)
+				if r := recover(); r != nil {
+					w.logger.Error("Upload panicked in worker (pre-upload or sync path)",
+						"worker", workerID,
+						"camera", task.cameraID,
+						"panic", r,
+						"stack", string(debug.Stack()))
+				}
+			}()
+
+			success := w.uploadWithRetry(task.cameraID, task.uploader, task.image, task.remotePath)
+
+			if success {
+				if err := task.queue.MarkUploaded(task.image); err != nil {
+					w.logger.Error("Failed to mark uploaded",
+						"worker", workerID,
+						"camera", task.cameraID,
+						"error", err)
+				}
+				w.mu.Lock()
+				if failState, exists := w.cameraFailures[task.cameraID]; exists {
+					failState.consecutiveFailures = 0
+				}
+				w.mu.Unlock()
 			}
-
-			// Reset failure state
-			w.mu.Lock()
-			if failState, exists := w.cameraFailures[task.cameraID]; exists {
-				failState.consecutiveFailures = 0
-			}
-			w.mu.Unlock()
-		}
-
-		// Remove from in-flight tracking (always, regardless of success/failure)
-		w.inFlightMu.Lock()
-		delete(w.inFlight, task.image.FilePath)
-		w.inFlightMu.Unlock()
-
-		// Decrement active uploads counter
-		w.mu.Lock()
-		w.activeUploads--
-		w.mu.Unlock()
+		}()
 	}
 }
 
@@ -524,6 +532,17 @@ func (w *UploadWorker) uploadWithRetry(cameraID string, uploader upload.Client, 
 
 	// Run upload in goroutine with timeout protection
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				w.logger.Error("Upload panicked in upload goroutine",
+					"camera", cameraID,
+					"path", remotePath,
+					"panic", r,
+					"stack", string(debug.Stack()))
+				resultCh <- uploadResult{false, fmt.Errorf("panic: %v", r)}
+			}
+		}()
+
 		// First attempt
 		err := uploader.Upload(remotePath, imageData)
 		if err == nil {
