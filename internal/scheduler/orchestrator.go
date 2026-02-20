@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/camera"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/resource"
-	timepkg "github.com/alexwitherspoon/aviationwx-bridge/internal/time"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/camera"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/resource"
+	timepkg "github.com/alexwitherspoon/AviationWX.org-Bridge/internal/time"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/upload"
 )
 
 // Orchestrator manages capture workers, upload worker, and queues

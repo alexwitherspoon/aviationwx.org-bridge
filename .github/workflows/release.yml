@@ -74,14 +74,14 @@ jobs:
           mkdir -p dist
           GIT_COMMIT=$(git rev-parse --short HEAD)
           go build -ldflags="-w -s -X main.Version=${{ steps.version.outputs.VERSION_NUM }} -X main.GitCommit=${GIT_COMMIT}" \
-            -o dist/aviationwx-bridge-${{ matrix.suffix }} \
+            -o dist/aviationwx.org-bridge-${{ matrix.suffix }} \
             ./cmd/bridge
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: aviationwx-bridge-${{ matrix.suffix }}
-          path: dist/aviationwx-bridge-${{ matrix.suffix }}
+          name: aviationwx.org-bridge-${{ matrix.suffix }}
+          path: dist/aviationwx.org-bridge-${{ matrix.suffix }}
 
   # Build and push Docker images
   build-docker:
@@ -187,8 +187,8 @@ jobs:
           # List final structure
           ls -lh
           # Make binaries executable and create checksums
-          chmod +x aviationwx-bridge-*
-          sha256sum aviationwx-bridge-* > checksums.txt
+          chmod +x aviationwx.org-bridge-*
+          sha256sum aviationwx.org-bridge-* > checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -203,17 +203,17 @@ jobs:
             
             #### Raspberry Pi (Recommended)
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
+            curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Bridge/main/scripts/install.sh | sudo bash
             ```
             
             #### Docker
             ```bash
-            docker pull ghcr.io/alexwitherspoon/aviationwx-bridge:${{ steps.version.outputs.VERSION_NUM }}
+            docker pull ghcr.io/alexwitherspoon/AviationWX.org-Bridge:${{ steps.version.outputs.VERSION_NUM }}
             ```
             
             ### Docker Images
             
-            Available at `ghcr.io/alexwitherspoon/aviationwx-bridge`:
+            Available at `ghcr.io/alexwitherspoon/AviationWX.org-Bridge`:
             - `:${{ steps.version.outputs.VERSION_NUM }}` - This specific version
             - `:latest` - Latest stable release
             
@@ -225,17 +225,17 @@ jobs:
             
             | Platform | Binary |
             |----------|--------|
-            | Linux (x86_64) | `aviationwx-bridge-linux-amd64` |
-            | Linux (ARM64/Pi 4) | `aviationwx-bridge-linux-arm64` |
-            | Linux (ARMv7/Pi 3) | `aviationwx-bridge-linux-armv7` |
-            | macOS (Intel) | `aviationwx-bridge-darwin-amd64` |
-            | macOS (Apple Silicon) | `aviationwx-bridge-darwin-arm64` |
+            | Linux (x86_64) | `aviationwx.org-bridge-linux-amd64` |
+            | Linux (ARM64/Pi 4) | `aviationwx.org-bridge-linux-arm64` |
+            | Linux (ARMv7/Pi 3) | `aviationwx.org-bridge-linux-armv7` |
+            | macOS (Intel) | `aviationwx.org-bridge-darwin-amd64` |
+            | macOS (Apple Silicon) | `aviationwx.org-bridge-darwin-arm64` |
             
             ### Changelog
             
-            See [CHANGELOG.md](https://github.com/alexwitherspoon/aviationwx-bridge/blob/main/CHANGELOG.md) for details.
+            See [CHANGELOG.md](https://github.com/alexwitherspoon/AviationWX.org-Bridge/blob/main/CHANGELOG.md) for details.
           files: |
-            dist/aviationwx-bridge-*
+            dist/aviationwx.org-bridge-*
             dist/checksums.txt
           draft: false
           prerelease: false

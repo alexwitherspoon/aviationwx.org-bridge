@@ -1,6 +1,6 @@
 # Releases
 
-Release notes and assets live on GitHub: https://github.com/alexwitherspoon/aviationwx-bridge/releases
+Release notes and assets live on GitHub: https://github.com/alexwitherspoon/AviationWX.org-Bridge/releases
 
 Version history is in [CHANGELOG.md](../../CHANGELOG.md).
 

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
 )
 
 // TestTimezoneUpdate tests the PUT /api/time endpoint

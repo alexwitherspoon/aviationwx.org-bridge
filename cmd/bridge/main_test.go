@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
 )
 
 func TestBridge_testCamera_Success(t *testing.T) {

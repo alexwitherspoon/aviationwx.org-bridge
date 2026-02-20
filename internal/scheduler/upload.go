@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/upload"
 )
 
 // UploadWorker handles uploading queued images to the server

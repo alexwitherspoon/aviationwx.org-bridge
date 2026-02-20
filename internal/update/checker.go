@@ -12,7 +12,7 @@ import (
 
 const (
 	// GitHub API URL for releases
-	releasesURL = "https://api.github.com/repos/alexwitherspoon/aviationwx-bridge/releases/latest"
+	releasesURL = "https://api.github.com/repos/alexwitherspoon/AviationWX.org-Bridge/releases/latest"
 
 	// Check interval - check once per hour
 	defaultCheckInterval = time.Hour
@@ -137,7 +137,7 @@ func (c *Checker) checkNow() error {
 
 	// Set headers
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", "aviationwx-bridge/"+c.currentVersion)
+	req.Header.Set("User-Agent", "aviationwx.org-bridge/"+c.currentVersion)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

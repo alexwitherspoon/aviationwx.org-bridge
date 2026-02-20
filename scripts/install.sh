@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 # AviationWX Bridge - Installation Script
-# https://github.com/alexwitherspoon/aviationwx-bridge
+# https://github.com/alexwitherspoon/AviationWX.org-Bridge
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Bridge/main/scripts/install.sh | sudo bash
 #
 # This script:
 #   1. Installs Docker (if not present)
@@ -16,9 +16,9 @@
 set -euo pipefail
 
 # Configuration
-REPO="alexwitherspoon/aviationwx-bridge"
+REPO="alexwitherspoon/AviationWX.org-Bridge"
 IMAGE_NAME="ghcr.io/${REPO}"
-CONTAINER_NAME="aviationwx-bridge"
+CONTAINER_NAME="aviationwx.org-bridge"
 DATA_DIR="/data/aviationwx"
 WEB_PORT="1229"
 ENV_FILE="${DATA_DIR}/environment"

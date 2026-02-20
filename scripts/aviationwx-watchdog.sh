@@ -9,7 +9,7 @@ readonly WATCHDOG_VERSION="2.0"
 readonly STATE_FILE="/data/aviationwx/watchdog-state.json"
 readonly LOG_FILE="/data/aviationwx/watchdog.log"
 readonly DATA_DIR="/data/aviationwx"
-readonly CONTAINER_NAME="aviationwx-bridge"
+readonly CONTAINER_NAME="aviationwx.org-bridge"
 readonly CONTAINER_START_SCRIPT="/usr/local/bin/aviationwx-container-start.sh"
 
 # Progressive escalation over 30 minutes

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Repository rename**: `aviationwx-bridge` → `AviationWX.org-Bridge`
+  - GitHub URL: `github.com/alexwitherspoon/AviationWX.org-Bridge`
+  - Docker image: `ghcr.io/alexwitherspoon/AviationWX.org-Bridge`
+  - Container name: `aviationwx.org-bridge`
+  - Binary artifacts: `aviationwx.org-bridge-{arch}`
+
 ## [2.3.0] - 2026-02-20
 
 ### Added

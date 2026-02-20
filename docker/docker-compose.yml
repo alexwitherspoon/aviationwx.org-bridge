@@ -1,5 +1,5 @@
 # AviationWX Bridge - Docker Compose Configuration
-# https://github.com/alexwitherspoon/aviationwx-bridge
+# https://github.com/alexwitherspoon/AviationWX.org-Bridge
 
 services:
   bridge:
@@ -8,7 +8,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         - GIT_COMMIT=${GIT_COMMIT:-dev}
-    container_name: aviationwx-bridge
+    container_name: aviationwx.org-bridge
     restart: unless-stopped  # Auto-restart on crash
     ports:
       - "1229:1229"  # Web console

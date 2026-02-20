@@ -41,7 +41,7 @@ docker-build: ## Build Docker image
 	docker build -f docker/Dockerfile \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
 		--build-arg VERSION=$(VERSION) \
-		-t aviationwx-bridge:latest .
+		-t aviationwx.org-bridge:latest .
 
 docker-up: ## Start Docker Compose
 	docker compose -f docker/docker-compose.yml up -d
@@ -66,7 +66,7 @@ dev: ## Start local development environment with Docker
 	docker build -f docker/Dockerfile \
 		--build-arg GIT_COMMIT=$(GIT_COMMIT) \
 		--build-arg VERSION=$(VERSION) \
-		-t aviationwx-bridge:latest .
+		-t aviationwx.org-bridge:latest .
 	@echo "🔄 Starting container..."
 	docker compose -f docker/docker-compose.yml up -d
 	@echo ""

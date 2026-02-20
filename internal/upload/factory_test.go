@@ -3,7 +3,7 @@ package upload
 import (
 	"testing"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
 )
 
 func TestNewClientFromConfig(t *testing.T) {

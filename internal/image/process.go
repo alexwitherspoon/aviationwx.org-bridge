@@ -12,7 +12,7 @@ import (
 	_ "image/gif"
 	_ "image/png"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
 )
 
 // Processor handles image resizing and quality adjustment

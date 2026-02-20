@@ -6,9 +6,9 @@
 set -euo pipefail
 
 readonly SCRIPT_VERSION="2.0"
-readonly GITHUB_REPO="alexwitherspoon/aviationwx-bridge"
+readonly GITHUB_REPO="alexwitherspoon/AviationWX.org-Bridge"
 readonly IMAGE_NAME="ghcr.io/${GITHUB_REPO}"
-readonly CONTAINER_NAME="aviationwx-bridge"
+readonly CONTAINER_NAME="aviationwx.org-bridge"
 readonly DATA_DIR="/data/aviationwx"
 readonly CONFIG_FILE="${DATA_DIR}/global.json"
 readonly LOG_FILE="${DATA_DIR}/supervisor.log"
@@ -160,7 +160,7 @@ update_host_scripts() {
 # ============================================================================
 
 get_current_version() {
-    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -q aviationwx-bridge; then
+    if docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' 2>/dev/null | grep -q aviationwx.org-bridge; then
         docker inspect "$CONTAINER_NAME" --format='{{.Config.Image}}' | cut -d: -f2
     else
         cat "${DATA_DIR}/last-known-good.txt" 2>/dev/null || echo "unknown"

@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/camera"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/resource"
-	timepkg "github.com/alexwitherspoon/aviationwx-bridge/internal/time"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/camera"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/resource"
+	timepkg "github.com/alexwitherspoon/AviationWX.org-Bridge/internal/time"
 )
 
 // CaptureWorker handles image capture for a single camera

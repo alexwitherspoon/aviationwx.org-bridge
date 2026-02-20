@@ -12,17 +12,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/camera"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/image"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/resource"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
-	timehealth "github.com/alexwitherspoon/aviationwx-bridge/internal/time"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/update"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/web"
-	"github.com/alexwitherspoon/aviationwx-bridge/pkg/health"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/camera"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/image"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/resource"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
+	timehealth "github.com/alexwitherspoon/AviationWX.org-Bridge/internal/time"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/update"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/upload"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/web"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/pkg/health"
 )
 
 func init() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
 )
 
 // NewClientFromConfig creates an upload client from the config package's Upload type.

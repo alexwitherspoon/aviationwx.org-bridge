@@ -6,8 +6,8 @@
 
 set -euo pipefail
 
-readonly CONTAINER_NAME="aviationwx-bridge"
-readonly IMAGE_NAME="ghcr.io/alexwitherspoon/aviationwx-bridge"
+readonly CONTAINER_NAME="aviationwx.org-bridge"
+readonly IMAGE_NAME="ghcr.io/alexwitherspoon/AviationWX.org-Bridge"
 readonly DATA_DIR="/data/aviationwx"
 
 # ============================================================================

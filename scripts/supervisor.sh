@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # AviationWX Bridge - Update Supervisor
-# https://github.com/alexwitherspoon/aviationwx-bridge
+# https://github.com/alexwitherspoon/AviationWX.org-Bridge
 #
 # This script manages automatic updates for AviationWX Bridge.
 # It is installed by install.sh and runs via systemd timer.
@@ -18,9 +18,9 @@
 set -euo pipefail
 
 # Configuration
-GITHUB_REPO="alexwitherspoon/aviationwx-bridge"
+GITHUB_REPO="alexwitherspoon/AviationWX.org-Bridge"
 IMAGE_NAME="ghcr.io/${GITHUB_REPO}"
-CONTAINER_NAME="aviationwx-bridge"
+CONTAINER_NAME="aviationwx.org-bridge"
 DATA_DIR="/data/aviationwx"
 WEB_PORT="1229"
 ENV_FILE="${DATA_DIR}/environment"

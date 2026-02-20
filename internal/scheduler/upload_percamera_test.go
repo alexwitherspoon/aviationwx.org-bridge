@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
+	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
 )
 
 // TestUploadWorker_PerCameraUploaders tests that each camera uses its own uploader

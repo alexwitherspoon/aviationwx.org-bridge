@@ -25,7 +25,7 @@ Each release should follow this structure:
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx-bridge/compare/v1.9.0...v2.0.0
+https://github.com/alexwitherspoon/AviationWX.org-Bridge/compare/v1.9.0...v2.0.0
 ```
 
 ## Metadata Fields
@@ -111,7 +111,7 @@ When creating a new release:
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.0.2...v2.1.0
+https://github.com/alexwitherspoon/AviationWX.org-Bridge/compare/v2.0.2...v2.1.0
 ```
 
 ### Edge Pre-Release
@@ -142,7 +142,7 @@ This release has passed CI but needs real-world testing. If you experience issue
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.1.0...v2.2.0-edge.1
+https://github.com/alexwitherspoon/AviationWX.org-Bridge/compare/v2.1.0...v2.2.0-edge.1
 ```
 
 ### Edge Release (After Stability Verification)
@@ -171,7 +171,7 @@ https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.1.0...v2.2.0-edg
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.1.0...v2.2.0-edge.2
+https://github.com/alexwitherspoon/AviationWX.org-Bridge/compare/v2.1.0...v2.2.0-edge.2
 ```
 
 ## Notes
