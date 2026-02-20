@@ -3,8 +3,10 @@ package web
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -293,4 +295,158 @@ func TestConfigServiceEventNotifications(t *testing.T) {
 	case <-time.After(1 * time.Second):
 		t.Error("Timeout waiting for delete event")
 	}
+}
+
+// testServerWithAuth creates a Server with auth (password: "test") for endpoint tests
+func testServerWithAuth(t *testing.T, cfg ServerConfig) *Server {
+	t.Helper()
+	tmpDir := t.TempDir()
+	svc, err := config.NewService(tmpDir)
+	if err != nil {
+		t.Fatalf("NewService: %v", err)
+	}
+	if err := svc.UpdateGlobal(func(g *config.GlobalSettings) error {
+		g.WebConsole = &config.WebConsole{Enabled: true, Password: "test"}
+		return nil
+	}); err != nil {
+		t.Fatalf("UpdateGlobal: %v", err)
+	}
+	cfg.ConfigService = svc
+	if cfg.GetStatus == nil {
+		cfg.GetStatus = func() interface{} { return map[string]interface{}{"status": "ok"} }
+	}
+	return NewServer(cfg)
+}
+
+// TestHandleTestCamera tests the POST /api/test/camera endpoint
+func TestHandleTestCamera(t *testing.T) {
+	fakeJPEG := []byte{0xFF, 0xD8, 0xFF, 0xD9} // Minimal valid JPEG
+
+	t.Run("success returns image", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			TestCamera: func(cam config.Camera) ([]byte, error) {
+				if cam.Type != "http" || cam.SnapshotURL != "http://example.com/snap.jpg" {
+					return nil, nil
+				}
+				return fakeJPEG, nil
+			},
+		})
+
+		camJSON := `{"id":"test","type":"http","snapshot_url":"http://example.com/snap.jpg"}`
+		req := httptest.NewRequest("POST", "/api/test/camera", bytes.NewBufferString(camJSON))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+		if ct := w.Header().Get("Content-Type"); ct != "image/jpeg" {
+			t.Errorf("Expected Content-Type image/jpeg, got %s", ct)
+		}
+		if !bytes.Equal(w.Body.Bytes(), fakeJPEG) {
+			t.Error("Response body should match returned image")
+		}
+	})
+
+	t.Run("failure returns 500 with error", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			TestCamera: func(config.Camera) ([]byte, error) {
+				return nil, fmt.Errorf("connection refused")
+			},
+		})
+
+		camJSON := `{"id":"test","type":"http","snapshot_url":"http://example.com/snap.jpg"}`
+		req := httptest.NewRequest("POST", "/api/test/camera", bytes.NewBufferString(camJSON))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("Expected 500, got %d", w.Code)
+		}
+		if !strings.Contains(w.Body.String(), "connection refused") {
+			t.Errorf("Expected error in body, got %s", w.Body.String())
+		}
+	})
+
+	t.Run("invalid JSON returns 400", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			TestCamera: func(config.Camera) ([]byte, error) { return fakeJPEG, nil },
+		})
+
+		req := httptest.NewRequest("POST", "/api/test/camera", bytes.NewBufferString("not json"))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("nil callback returns 503", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{})
+		// TestCamera not set
+
+		camJSON := `{"id":"test","type":"http","snapshot_url":"http://example.com/snap.jpg"}`
+		req := httptest.NewRequest("POST", "/api/test/camera", bytes.NewBufferString(camJSON))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusServiceUnavailable {
+			t.Errorf("Expected 503, got %d", w.Code)
+		}
+	})
+}
+
+// TestHandleTestUpload tests the POST /api/test/upload endpoint
+func TestHandleTestUpload(t *testing.T) {
+	t.Run("success returns ok", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			TestUpload: func(config.Upload) error { return nil },
+		})
+
+		uploadJSON := `{"host":"upload.example.com","port":2121,"username":"u","password":"p","tls":true}`
+		req := httptest.NewRequest("POST", "/api/test/upload", bytes.NewBufferString(uploadJSON))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+		var result map[string]string
+		if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
+			t.Fatalf("Invalid JSON: %v", err)
+		}
+		if result["status"] != "ok" {
+			t.Errorf("Expected status ok, got %s", result["status"])
+		}
+	})
+
+	t.Run("failure returns 500", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			TestUpload: func(config.Upload) error {
+				return fmt.Errorf("connection refused")
+			},
+		})
+
+		uploadJSON := `{"host":"upload.example.com","port":2121,"username":"u","password":"p","tls":true}`
+		req := httptest.NewRequest("POST", "/api/test/upload", bytes.NewBufferString(uploadJSON))
+		req.SetBasicAuth("admin", "test")
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusInternalServerError {
+			t.Errorf("Expected 500, got %d", w.Code)
+		}
+	})
 }
