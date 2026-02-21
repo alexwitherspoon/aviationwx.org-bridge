@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.1] - 2026-02-21
+
 ### Fixed
 - **Web UI**: Webcam preview no longer flashes every second; only updates when a new capture exists (last_capture_time changed)
 - **Web UI**: Status text (countdown, badges) updates in place without rebuilding preview images
