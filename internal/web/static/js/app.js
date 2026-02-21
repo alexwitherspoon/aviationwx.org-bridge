@@ -6,6 +6,7 @@
 // State
 let config = null;
 let status = null;
+let previousCameraIds = null;
 let cameras = [];
 let timeUpdateInterval = null;
 
@@ -117,8 +118,17 @@ async function refreshStatus() {
 async function loadCameras() {
     try {
         cameras = await api('/cameras');
-        updateCameraList();
-        updateCameraOverview();
+        const cameraIds = cameras.map((c) => c.id).sort().join(',');
+        const camerasChanged = previousCameraIds !== cameraIds;
+        previousCameraIds = cameraIds;
+
+        if (camerasChanged) {
+            updateCameraList();
+            updateCameraOverview();
+        } else {
+            updateCameraListStatus();
+            updateCameraOverviewStatus();
+        }
     } catch (err) {
         console.error('Failed to load cameras:', err);
     }
@@ -274,7 +284,7 @@ function updateCameraOverview() {
         }
         
         return `
-        <div class="camera-overview-item">
+        <div class="camera-overview-item" data-camera-id="${cam.id}">
             <div class="camera-preview">
                 <img src="/api/cameras/${cam.id}/preview" 
                      alt="${escapeHtml(cam.name)}"
@@ -296,8 +306,59 @@ function updateCameraOverview() {
         </div>
     `}).join('');
     
-    // Start smooth image refresh for preview images
     startSmoothImageRefresh();
+    initLastDisplayedCaptureTimes();
+}
+
+function initLastDisplayedCaptureTimes() {
+    if (!status?.orchestrator) return;
+    status.orchestrator.camera_stats?.forEach((cs) => {
+        const t = cs.capture_stats?.last_capture_time;
+        if (t) {
+            lastDisplayedCaptureTime.set(cs.camera_id, new Date(t).getTime());
+        }
+    });
+}
+
+function updateCameraOverviewStatus() {
+    if (!status?.orchestrator) return;
+    document.querySelectorAll('.camera-overview-item[data-camera-id]').forEach((item) => {
+        const cameraId = item.dataset.cameraId;
+        const cam = cameras.find((c) => c.id === cameraId);
+        if (!cam) return;
+
+        let statusBadge = '';
+        let nextCaptureInfo = '';
+        const camStats = status.orchestrator.camera_stats?.find((cs) => cs.camera_id === cameraId);
+        if (cam.enabled && camStats) {
+            if (camStats.capture_stats?.currently_capturing) {
+                statusBadge = '<span class="status-badge capturing">Capturing</span>';
+            } else if (camStats.capture_stats?.next_capture_time) {
+                const nextTime = new Date(camStats.capture_stats.next_capture_time);
+                const now = new Date();
+                const secondsUntil = Math.max(0, Math.floor((nextTime - now) / 1000));
+                nextCaptureInfo = `<span class="next-capture">Next: ${secondsUntil}s</span>`;
+            }
+            const uploadStats = status.orchestrator.upload_stats;
+            if (uploadStats?.per_camera_failures) {
+                const failures = uploadStats.per_camera_failures[cameraId] || 0;
+                if (failures > 0) {
+                    statusBadge += ` <span class="status-badge error">⚠️ ${failures} upload failures</span>`;
+                }
+            }
+        }
+
+        const statusInfo = item.querySelector('.camera-status-info');
+        if (statusInfo) {
+            statusInfo.innerHTML = `${nextCaptureInfo} ${statusBadge}`;
+        }
+
+        const badge = item.querySelector('.camera-status-badge');
+        if (badge) {
+            badge.textContent = cam.enabled ? 'Active' : 'Paused';
+            badge.className = `camera-status-badge ${cam.enabled ? 'active' : 'paused'}`;
+        }
+    });
 }
 
 function updateCameraList() {
@@ -312,105 +373,8 @@ function updateCameraList() {
         return;
     }
     
-    container.innerHTML = cameras.map(cam => {
-        // Calculate next capture countdown
-        let nextCaptureText = 'Unknown';
-        let captureStatusText = '';
-        if (cam.worker_running && status && status.orchestrator) {
-            const camStats = status.orchestrator.camera_stats?.find(cs => cs.camera_id === cam.id);
-            if (camStats) {
-                if (camStats.capture_stats?.currently_capturing) {
-                    captureStatusText = '<span class="status-active">🔴 Capturing now</span>';
-                } else if (camStats.capture_stats?.next_capture_time) {
-                    const nextTime = new Date(camStats.capture_stats.next_capture_time);
-                    const now = new Date();
-                    const secondsUntil = Math.max(0, Math.floor((nextTime - now) / 1000));
-                    nextCaptureText = `${secondsUntil}s`;
-                    captureStatusText = `<span class="status-info">Next: ${nextCaptureText}</span>`;
-                }
-            }
-        }
-
-        // Upload status
-        let uploadStatusText = '';
-        if (status && status.orchestrator && status.orchestrator.upload_stats?.currently_uploading) {
-            uploadStatusText = '<span class="status-active">🔴 Uploading</span>';
-        }
-
-        // Upload failures
-        let uploadFailureText = '';
-        if (status && status.orchestrator && status.orchestrator.upload_stats) {
-            const perCameraFailures = status.orchestrator.upload_stats.per_camera_failures || {};
-            const failures = perCameraFailures[cam.id] || 0;
-            const lastReason = status.orchestrator.upload_stats.last_failure_reason;
-            if (failures > 0) {
-                uploadFailureText = `
-                    <div class="detail-row error">
-                        <span class="label">Upload Failures</span>
-                        <span class="value">${failures}</span>
-                    </div>
-                `;
-                if (lastReason) {
-                    uploadFailureText += `
-                        <div class="detail-row error">
-                            <span class="label">Last Error</span>
-                            <span class="value">${escapeHtml(lastReason.substring(0, 50))}</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // Capture errors
-        let captureErrorText = '';
-        if (status && status.orchestrator) {
-            const camStats = status.orchestrator.camera_stats?.find(cs => cs.camera_id === cam.id);
-            if (camStats && camStats.last_error && camStats.last_error.Message) {
-                const errorMsg = camStats.last_error.Message;
-                // Extract the key error (Connection refused, etc.)
-                let shortError = errorMsg;
-                if (errorMsg.includes('Connection refused')) {
-                    shortError = 'Connection refused - RTSP server not available';
-                } else if (errorMsg.includes('timed out')) {
-                    shortError = 'Connection timed out';
-                } else if (errorMsg.includes('Authentication')) {
-                    shortError = 'Authentication failed';
-                } else {
-                    // Extract just the last meaningful line
-                    const lines = errorMsg.split('\n').filter(l => l.trim());
-                    shortError = lines[lines.length - 1] || errorMsg.substring(0, 80);
-                }
-                
-                captureErrorText = `
-                    <div class="detail-row error">
-                        <span class="label">⚠️ Capture Error</span>
-                        <span class="value">${escapeHtml(shortError)}</span>
-                    </div>
-                `;
-                if (camStats.is_backing_off) {
-                    captureErrorText += `
-                        <div class="detail-row error">
-                            <span class="label">Status</span>
-                            <span class="value">Backing off, will retry soon</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // Queue status
-        let queueCount = 0;
-        let queueStatusClass = 'healthy';
-        if (status && status.orchestrator) {
-            const camStats = status.orchestrator.camera_stats?.find(cs => cs.camera_id === cam.id);
-            if (camStats && camStats.queue_stats) {
-                queueCount = camStats.queue_stats.image_count || 0;
-                const queuePercent = (queueCount / 50) * 100; // Assume 50 is critical
-                if (queuePercent > 80) queueStatusClass = 'critical';
-                else if (queuePercent > 50) queueStatusClass = 'warning';
-            }
-        }
-
+    container.innerHTML = cameras.map((cam) => {
+        const detailsHtml = buildCameraCardDetails(cam);
         return `
         <div class="camera-card" data-camera-id="${cam.id}">
             <div class="camera-card-header">
@@ -434,43 +398,141 @@ function updateCameraList() {
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
                     <span style="display:none">Preview not available</span>
                 </div>
-                <div class="camera-card-details">
-                    <div class="detail-row">
-                        <span class="label">Type</span>
-                        <span class="value">${cam.type}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Capture Interval</span>
-                        <span class="value">${cam.capture_interval_seconds}s</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Status</span>
-                        <span class="value">${captureStatusText}${uploadStatusText ? ' | ' + uploadStatusText : ''}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Upload User</span>
-                        <span class="value">${cam.upload?.username || 'Not configured'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Upload Host</span>
-                        <span class="value">${cam.upload?.host || 'upload.aviationwx.org'}</span>
-                    </div>
-                    ${captureErrorText}
-                    ${uploadFailureText}
-                    
-                    <div class="queue-health">
-                        <div class="queue-health-label">
-                            <span>Queue</span>
-                            <span>${queueCount} files</span>
-                        </div>
-                        <div class="queue-health-bar">
-                            <div class="queue-health-fill ${queueStatusClass}" style="width: ${Math.min(100, (queueCount / 50) * 100)}%"></div>
-                        </div>
-                    </div>
-                </div>
+                <div class="camera-card-details" data-camera-id="${cam.id}">${detailsHtml}</div>
             </div>
         </div>
     `}).join('');
+}
+
+function buildCameraCardDetails(cam) {
+    let captureStatusText = '';
+    if (cam.worker_running && status && status.orchestrator) {
+        const camStats = status.orchestrator.camera_stats?.find((cs) => cs.camera_id === cam.id);
+        if (camStats) {
+            if (camStats.capture_stats?.currently_capturing) {
+                captureStatusText = '<span class="status-active">🔴 Capturing now</span>';
+            } else if (camStats.capture_stats?.next_capture_time) {
+                const nextTime = new Date(camStats.capture_stats.next_capture_time);
+                const now = new Date();
+                const secondsUntil = Math.max(0, Math.floor((nextTime - now) / 1000));
+                captureStatusText = `<span class="status-info">Next: ${secondsUntil}s</span>`;
+            }
+        }
+    }
+    let uploadStatusText = '';
+    if (status?.orchestrator?.upload_stats?.currently_uploading) {
+        uploadStatusText = '<span class="status-active">🔴 Uploading</span>';
+    }
+    let uploadFailureText = '';
+    if (status?.orchestrator?.upload_stats) {
+        const failures = status.orchestrator.upload_stats.per_camera_failures?.[cam.id] || 0;
+        const lastReason = status.orchestrator.upload_stats.last_failure_reason;
+        if (failures > 0) {
+            uploadFailureText = `
+                <div class="detail-row error">
+                    <span class="label">Upload Failures</span>
+                    <span class="value">${failures}</span>
+                </div>
+            `;
+            if (lastReason) {
+                uploadFailureText += `
+                    <div class="detail-row error">
+                        <span class="label">Last Error</span>
+                        <span class="value">${escapeHtml(lastReason.substring(0, 50))}</span>
+                    </div>
+                `;
+            }
+        }
+    }
+    let captureErrorText = '';
+    if (status?.orchestrator) {
+        const camStats = status.orchestrator.camera_stats?.find((cs) => cs.camera_id === cam.id);
+        if (camStats?.last_error?.Message) {
+            const errorMsg = camStats.last_error.Message;
+            let shortError = errorMsg;
+            if (errorMsg.includes('Connection refused')) {
+                shortError = 'Connection refused - RTSP server not available';
+            } else if (errorMsg.includes('timed out')) {
+                shortError = 'Connection timed out';
+            } else if (errorMsg.includes('Authentication')) {
+                shortError = 'Authentication failed';
+            } else {
+                const lines = errorMsg.split('\n').filter((l) => l.trim());
+                shortError = lines[lines.length - 1] || errorMsg.substring(0, 80);
+            }
+            captureErrorText = `
+                <div class="detail-row error">
+                    <span class="label">⚠️ Capture Error</span>
+                    <span class="value">${escapeHtml(shortError)}</span>
+                </div>
+            `;
+            if (camStats.is_backing_off) {
+                captureErrorText += `
+                    <div class="detail-row error">
+                        <span class="label">Status</span>
+                        <span class="value">Backing off, will retry soon</span>
+                    </div>
+                `;
+            }
+        }
+    }
+    let queueCount = 0;
+    let queueStatusClass = 'healthy';
+    if (status?.orchestrator) {
+        const camStats = status.orchestrator.camera_stats?.find((cs) => cs.camera_id === cam.id);
+        if (camStats?.queue_stats) {
+            queueCount = camStats.queue_stats.image_count || 0;
+            const queuePercent = (queueCount / 50) * 100;
+            if (queuePercent > 80) queueStatusClass = 'critical';
+            else if (queuePercent > 50) queueStatusClass = 'warning';
+        }
+    }
+    return `
+        <div class="detail-row">
+            <span class="label">Type</span>
+            <span class="value">${cam.type}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Capture Interval</span>
+            <span class="value">${cam.capture_interval_seconds}s</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Status</span>
+            <span class="value">${captureStatusText}${uploadStatusText ? ' | ' + uploadStatusText : ''}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Upload User</span>
+            <span class="value">${cam.upload?.username || 'Not configured'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">Upload Host</span>
+            <span class="value">${cam.upload?.host || 'upload.aviationwx.org'}</span>
+        </div>
+        ${captureErrorText}
+        ${uploadFailureText}
+        <div class="queue-health">
+            <div class="queue-health-label">
+                <span>Queue</span>
+                <span>${queueCount} files</span>
+            </div>
+            <div class="queue-health-bar">
+                <div class="queue-health-fill ${queueStatusClass}" style="width: ${Math.min(100, (queueCount / 50) * 100)}%"></div>
+            </div>
+        </div>
+    `;
+}
+
+function updateCameraListStatus() {
+    if (!status?.orchestrator) return;
+    document.querySelectorAll('.camera-card[data-camera-id]').forEach((card) => {
+        const cameraId = card.dataset.cameraId;
+        const cam = cameras.find((c) => c.id === cameraId);
+        if (!cam) return;
+        const detailsEl = card.querySelector('.camera-card-details');
+        if (detailsEl) {
+            detailsEl.innerHTML = buildCameraCardDetails(cam);
+        }
+    });
 }
 
 // Time management
@@ -1366,54 +1428,57 @@ setInterval(async () => {
     await refreshStatus();
 }, 30000);
 
-// Smooth image refresh system
+// Smooth image refresh: only when a new capture exists (last_capture_time changed)
 let imageRefreshIntervals = new Map();
+let lastDisplayedCaptureTime = new Map();
 
 function startSmoothImageRefresh() {
-    // Clear any existing intervals
-    imageRefreshIntervals.forEach(interval => clearInterval(interval));
+    imageRefreshIntervals.forEach((interval) => clearInterval(interval));
     imageRefreshIntervals.clear();
-    
-    // Find all camera preview images
-    const previewImages = document.querySelectorAll('.camera-preview-img');
-    
-    previewImages.forEach(img => {
-        const cameraId = img.dataset.cameraId;
-        if (!cameraId) return;
-        
-        // Create smooth refresh for this camera
-        // Refresh every 5 seconds (adjust based on your needs)
+
+    const cameraIds = new Set();
+    document.querySelectorAll('.camera-preview-img[data-camera-id]').forEach((img) => {
+        const id = img.dataset.cameraId;
+        if (id) cameraIds.add(id);
+    });
+
+    cameraIds.forEach((cameraId) => {
         const intervalId = setInterval(() => {
-            smoothRefreshImage(img, cameraId);
+            smoothRefreshImage(cameraId);
         }, 5000);
-        
         imageRefreshIntervals.set(cameraId, intervalId);
     });
 }
 
-function smoothRefreshImage(img, cameraId) {
-    // Create a new image in the background
-    const newImg = new Image();
+function smoothRefreshImage(cameraId) {
+    if (!window.shouldRefreshPreview?.(cameraId, lastDisplayedCaptureTime, status)) {
+        return;
+    }
+
+    const camStats = status?.orchestrator?.camera_stats?.find((cs) => cs.camera_id === cameraId);
+    const newCaptureTime = new Date(camStats.capture_stats.last_capture_time).getTime();
+
     const refreshUrl = `/api/cameras/${cameraId}/preview?t=${Date.now()}`;
-    
-    newImg.onload = function() {
-        // Fade out current image
-        img.style.transition = 'opacity 0.3s ease-in-out';
-        img.style.opacity = '0';
-        
-        // After fade out, swap the src and fade in
-        setTimeout(() => {
-            img.src = refreshUrl;
-            img.style.opacity = '1';
-        }, 300);
+    const newImg = new Image();
+
+    newImg.onload = function () {
+        lastDisplayedCaptureTime.set(cameraId, newCaptureTime);
+        const imgs = document.querySelectorAll(`.camera-preview-img[data-camera-id="${cameraId}"]`);
+        imgs.forEach((img) => {
+            img.style.transition = 'opacity 0.5s ease-in-out';
+            img.style.opacity = '0';
+
+            setTimeout(() => {
+                img.src = refreshUrl;
+                img.style.opacity = '1';
+            }, 500);
+        });
     };
-    
-    newImg.onerror = function() {
-        // If new image fails to load, don't update
+
+    newImg.onerror = function () {
         console.log(`Failed to load preview for ${cameraId}`);
     };
-    
-    // Start loading the new image
+
     newImg.src = refreshUrl;
 }
 

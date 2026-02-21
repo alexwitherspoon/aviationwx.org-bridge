@@ -405,6 +405,134 @@ func TestHandleTestCamera(t *testing.T) {
 	})
 }
 
+// TestCameraPreview tests GET /api/cameras/{id}/preview
+func TestCameraPreview(t *testing.T) {
+	fakeJPEG := []byte{0xFF, 0xD8, 0xFF, 0xD9}
+
+	t.Run("success returns image", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			GetCameraImage: func(cameraID string) ([]byte, error) {
+				if cameraID != "preview-cam" {
+					return nil, fmt.Errorf("unknown camera")
+				}
+				return fakeJPEG, nil
+			},
+		})
+		svc := server.configService
+		svc.AddCamera(config.Camera{
+			ID:      "preview-cam",
+			Name:    "Preview Test",
+			Type:    "http",
+			Enabled: true,
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+		})
+
+		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
+		req.SetBasicAuth("admin", "test")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected 200, got %d: %s", w.Code, w.Body.String())
+		}
+		if ct := w.Header().Get("Content-Type"); ct != "image/jpeg" {
+			t.Errorf("Expected Content-Type image/jpeg, got %s", ct)
+		}
+		if !bytes.Equal(w.Body.Bytes(), fakeJPEG) {
+			t.Error("Response body should match returned image")
+		}
+		if cc := w.Header().Get("Cache-Control"); cc != "no-cache, no-store, must-revalidate" {
+			t.Errorf("Expected Cache-Control no-cache, got %s", cc)
+		}
+	})
+
+	t.Run("nil callback returns 503", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{})
+		svc := server.configService
+		svc.AddCamera(config.Camera{
+			ID:      "preview-cam",
+			Name:    "Preview Test",
+			Type:    "http",
+			Enabled: true,
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+		})
+
+		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
+		req.SetBasicAuth("admin", "test")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusServiceUnavailable {
+			t.Errorf("Expected 503, got %d", w.Code)
+		}
+	})
+
+	t.Run("unknown camera returns 404", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			GetCameraImage: func(string) ([]byte, error) { return fakeJPEG, nil },
+		})
+
+		req := httptest.NewRequest("GET", "/api/cameras/nonexistent/preview", nil)
+		req.SetBasicAuth("admin", "test")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected 404, got %d", w.Code)
+		}
+	})
+
+	t.Run("no image available returns 204", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			GetCameraImage: func(cameraID string) ([]byte, error) {
+				return nil, fmt.Errorf("no image available yet")
+			},
+		})
+		svc := server.configService
+		svc.AddCamera(config.Camera{
+			ID:      "preview-cam",
+			Name:    "Preview Test",
+			Type:    "http",
+			Enabled: true,
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+		})
+
+		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
+		req.SetBasicAuth("admin", "test")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusNoContent {
+			t.Errorf("Expected 204, got %d", w.Code)
+		}
+	})
+
+	t.Run("empty image returns 204", func(t *testing.T) {
+		server := testServerWithAuth(t, ServerConfig{
+			GetCameraImage: func(cameraID string) ([]byte, error) {
+				return []byte{}, nil
+			},
+		})
+		svc := server.configService
+		svc.AddCamera(config.Camera{
+			ID:      "preview-cam",
+			Name:    "Preview Test",
+			Type:    "http",
+			Enabled: true,
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+		})
+
+		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
+		req.SetBasicAuth("admin", "test")
+		w := httptest.NewRecorder()
+		server.GetMux().ServeHTTP(w, req)
+
+		if w.Code != http.StatusNoContent {
+			t.Errorf("Expected 204, got %d", w.Code)
+		}
+	})
+}
+
 // TestHandleTestUpload tests the POST /api/test/upload endpoint
 func TestHandleTestUpload(t *testing.T) {
 	t.Run("success returns ok", func(t *testing.T) {
