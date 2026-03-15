@@ -262,9 +262,8 @@ func (s *Server) addCamera(w http.ResponseWriter, r *http.Request) {
 		cam.Upload.Host = "upload.aviationwx.org"
 	}
 	if cam.Upload.Port == 0 {
-		cam.Upload.Port = 2121
+		cam.Upload.Port = 2222
 	}
-	cam.Upload.TLS = true
 
 	// Add camera via ConfigService
 	if err := s.configService.AddCamera(cam); err != nil {

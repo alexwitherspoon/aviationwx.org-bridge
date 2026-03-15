@@ -17,8 +17,8 @@
       "upload": {
         "host": "upload.aviationwx.org",
         "port": 21,
-        "username": "your-ftp-username",
-        "password": "your-ftp-password",
+        "username": "your-sftp-username",
+        "password": "your-sftp-password",
         "tls": true
       }
     },
@@ -41,8 +41,8 @@
       "upload": {
         "host": "upload.aviationwx.org",
         "port": 21,
-        "username": "your-ftp-username-2",
-        "password": "your-ftp-password-2",
+        "username": "your-sftp-username-2",
+        "password": "your-sftp-password-2",
         "tls": true
       }
     }

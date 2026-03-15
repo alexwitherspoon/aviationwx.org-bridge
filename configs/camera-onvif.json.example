@@ -18,8 +18,8 @@
   "upload": {
     "host": "upload.aviationwx.org",
     "port": 2121,
-    "username": "your-ftp-username",
-    "password": "your-ftp-password",
+    "username": "your-sftp-username",
+    "password": "your-sftp-password",
     "tls": true,
     "ca_bundle": "/path/to/custom-ca-bundle.pem"
   }

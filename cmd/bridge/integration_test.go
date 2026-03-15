@@ -41,7 +41,6 @@ func TestBridgeWithConfigService(t *testing.T) {
 			Port:     2121,
 			Username: "testuser",
 			Password: "testpass",
-			TLS:      true,
 		},
 	}
 
@@ -329,7 +328,6 @@ func TestMigrationFromLegacy(t *testing.T) {
 					Port:     2121,
 					Username: "legacyuser",
 					Password: "legacypass",
-					TLS:      true,
 				},
 			},
 		},
@@ -396,7 +394,6 @@ func TestPasswordPreservation(t *testing.T) {
 			Port:     2121,
 			Username: "user",
 			Password: "secret123",
-			TLS:      true,
 		},
 	}
 	svc.AddCamera(cam)

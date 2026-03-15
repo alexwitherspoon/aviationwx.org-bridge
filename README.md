@@ -7,7 +7,7 @@ Remote bridge device for capturing webcam snapshots and uploading them to Aviati
 AviationWX.org Bridge is a lightweight daemon that:
 - Captures webcam snapshots from local network cameras (HTTP, ONVIF, RTSP)
 - Queues images locally with accurate observation timestamps
-- Uploads to `upload.aviationwx.org` via SFTP (recommended) or FTPS
+- Uploads to `upload.aviationwx.org` via SFTP
 - Uses tmpfs (RAM) for image buffering to avoid SD card wear
 - Provides a modern web console for configuration and monitoring
 
@@ -135,7 +135,7 @@ Access the web console at `http://<device-ip>:1229/` to configure:
 - Image processing (resize, quality)
 - Queue management settings
 
-### FTP Credentials
+### SFTP Credentials
 
 Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload credentials.
 
@@ -173,7 +173,7 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
 - **Historic Replay**: Queue images for time-series display on aviationwx.org
 - **Accurate Timestamps**: UTC observation times with EXIF validation (via exiftool)
 - **Web Console**: Modern dashboard with camera preview and management
-- **Secure Upload**: SFTP (recommended) or FTPS with fail2ban-aware retry logic
+- **Secure Upload**: SFTP with fail2ban-aware retry logic
 - **Low Memory**: Optimized for Raspberry Pi Zero 2 W (512MB RAM)
 - **NTP Health**: Automatic time validation and drift detection
 - **Auto Updates**: Critical security updates with automatic rollback (Path A)
@@ -205,7 +205,7 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
 │         ▼                                                    │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │              Upload Worker (round-robin)                │ │
-│  │   → SFTP/FTPS to upload.aviationwx.org                  │ │
+│  │   → SFTP to upload.aviationwx.org                        │ │
 │  └─────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -230,7 +230,7 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
 
 - Container runs as non-root user
 - Minimal Linux capabilities
-- FTPS TLS enabled by default
+- SFTP for secure uploads
 - Web console protected by password authentication
 - Read-only filesystem (only `/data` writable)
 - Automatic security updates (Path A)

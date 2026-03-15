@@ -7,38 +7,25 @@ import (
 	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
 )
 
-// NewClientFromConfig creates an upload client from the config package's Upload type.
-// Converts the config.Upload to upload.Config and creates the appropriate client based on protocol.
-// Supports "sftp" (default, recommended) and "ftps" (legacy) protocols.
+// NewClientFromConfig creates an SFTP upload client from the config package's Upload type.
+// Protocol "ftps" and "ftp" are migrated to SFTP (port 2222) for backward compatibility.
 func NewClientFromConfig(cfg config.Upload) (Client, error) {
-	// Normalize protocol (default to SFTP, case-insensitive)
+	// Normalize protocol: migrate deprecated FTPS/FTP to SFTP
 	protocol := strings.ToLower(strings.TrimSpace(cfg.Protocol))
-	if protocol == "" {
-		protocol = "sftp" // Default to SFTP
+	if protocol == "" || protocol == "ftps" || protocol == "ftp" {
+		protocol = "sftp"
+	}
+	if protocol != "sftp" {
+		return nil, fmt.Errorf("unsupported upload protocol: %s (SFTP only)", protocol)
 	}
 
-	// Default DisableEPSV to true (use standard PASV) if not specified (FTPS only)
-	disableEPSV := true
-	if cfg.DisableEPSV != nil {
-		disableEPSV = *cfg.DisableEPSV
-	}
-
-	// Set default ports based on protocol
 	port := cfg.Port
 	if port == 0 {
-		switch protocol {
-		case "sftp":
-			port = 22
-		case "ftps":
-			port = 2121
-		default:
-			port = 22 // Default to SFTP port
-		}
+		port = 2222 // aviationwx.org SFTP port
 	}
 
-	// Set default base path for SFTP
 	basePath := cfg.BasePath
-	if basePath == "" && protocol == "sftp" {
+	if basePath == "" {
 		basePath = "/files" // Default SFTP upload directory
 	}
 
@@ -47,22 +34,10 @@ func NewClientFromConfig(cfg config.Upload) (Client, error) {
 		Port:                  port,
 		Username:              cfg.Username,
 		Password:              cfg.Password,
-		TLS:                   cfg.TLS,
-		TLSVerify:             cfg.TLSVerify,
-		CABundlePath:          cfg.CABundlePath,
 		TimeoutConnectSeconds: cfg.TimeoutConnectSeconds,
 		TimeoutUploadSeconds:  cfg.TimeoutUploadSeconds,
-		DisableEPSV:           disableEPSV,
 		BasePath:              basePath,
 	}
 
-	// Create appropriate client based on protocol
-	switch protocol {
-	case "sftp":
-		return NewSFTPClient(uploadConfig)
-	case "ftps", "ftp":
-		return NewFTPSClient(uploadConfig)
-	default:
-		return nil, fmt.Errorf("unsupported upload protocol: %s (supported: sftp, ftps)", protocol)
-	}
+	return NewSFTPClient(uploadConfig)
 }

@@ -132,9 +132,9 @@ Or use your existing update tooling (Watchtower, Portainer, ArgoCD, etc.)
 2. Log in with default password (`aviationwx`)
 3. **Change the password immediately**
 4. Set your timezone
-5. Add cameras with their FTP credentials
+5. Add cameras with their SFTP credentials
 
-### Get FTP Credentials
+### Get SFTP Credentials
 
 Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload credentials for your cameras.
 
@@ -154,9 +154,10 @@ Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) to obtain upload
       "capture_interval_seconds": 60,
       "upload": {
         "host": "upload.aviationwx.org",
+        "port": 2222,
         "username": "your-username",
         "password": "your-password",
-        "tls": true
+        "base_path": "/files"
       }
     }
   ],
@@ -268,7 +269,7 @@ The bridge uses a RAM-based filesystem (tmpfs) to store images waiting for uploa
 Images queue up when:
 - Upload connection is temporarily unavailable
 - Network is slower than capture rate
-- FTP server is briefly unreachable
+- SFTP server is briefly unreachable
 
 The queue must be large enough to hold images during these periods without losing data.
 
@@ -473,12 +474,11 @@ curl -v http://192.168.1.100/snapshot.jpg
 ### Upload Fails
 
 ```bash
-# Check FTP credentials
-# Verify TLS is enabled (required by server)
-# Check firewall allows outbound port 21
+# Check SFTP credentials
+# Check firewall allows outbound port 2222
 
 # Test connection
-curl -v ftps://upload.aviationwx.org:21
+ssh -p 2222 your-username@upload.aviationwx.org
 ```
 
 ### Memory Issues

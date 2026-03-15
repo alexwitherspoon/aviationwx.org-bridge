@@ -44,8 +44,8 @@ type GlobalSettings struct {
 	Timezone              string       `json:"timezone,omitempty"`                // IANA timezone
 	UpdateChannel         string       `json:"update_channel,omitempty"`          // Update channel: "latest" or "edge"
 	MaxConcurrentUploads  int          `json:"max_concurrent_uploads,omitempty"`  // Max concurrent uploads (default: 2)
-	TimeoutConnectSeconds int          `json:"timeout_connect_seconds,omitempty"` // FTPS connect timeout (default: 60)
-	TimeoutUploadSeconds  int          `json:"timeout_upload_seconds,omitempty"`  // FTPS upload timeout (default: 300)
+	TimeoutConnectSeconds int          `json:"timeout_connect_seconds,omitempty"` // SFTP connect timeout (default: 60)
+	TimeoutUploadSeconds  int          `json:"timeout_upload_seconds,omitempty"`  // SFTP upload timeout (default: 300)
 	Global                *Global      `json:"global,omitempty"`                  // Global operational settings
 	Queue                 *QueueGlobal `json:"queue,omitempty"`                   // Queue settings
 	SNTP                  *SNTP        `json:"sntp,omitempty"`                    // Time sync settings

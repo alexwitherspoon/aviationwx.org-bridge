@@ -3,6 +3,7 @@ package upload
 import (
 	"fmt"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -145,6 +146,11 @@ func (c *SFTPClient) connect() error {
 	}
 
 	return nil
+}
+
+// normalizeRemotePath normalizes the remote path by removing leading slashes
+func normalizeRemotePath(remotePath string) string {
+	return strings.TrimPrefix(remotePath, "/")
 }
 
 // Close closes SFTP and SSH connections

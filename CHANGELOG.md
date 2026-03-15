@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **FTPS support**: Deprecated and removed. SFTP only.
+  - Config with `protocol: "ftps"` or `protocol: "ftp"` is migrated to SFTP (port 2222)
+  - Removed `secsy/goftp` dependency
+  - Simplified upload config (no TLS, TLSVerify, CABundlePath, DisableEPSV)
+  - Web UI: protocol selector removed (SFTP only)
+
 ## [2.5.1] - 2026-02-21
 
 ### Fixed
