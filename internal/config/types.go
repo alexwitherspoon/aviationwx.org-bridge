@@ -33,7 +33,7 @@ type Camera struct {
 	Image *ImageProcessing `json:"image,omitempty"` // Resolution/quality settings
 
 	// Upload settings (per-camera SFTP credentials)
-	Upload *Upload `json:"upload"` // FTP credentials for this camera
+	Upload *Upload `json:"upload"` // SFTP credentials for this camera
 
 	// Queue settings (optional, uses global defaults if not set)
 	Queue *QueueCamera `json:"queue,omitempty"`

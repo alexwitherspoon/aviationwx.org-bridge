@@ -17,10 +17,8 @@
   },
   "upload": {
     "host": "upload.aviationwx.org",
-    "port": 2121,
+    "port": 2222,
     "username": "your-sftp-username",
-    "password": "your-sftp-password",
-    "tls": true,
-    "ca_bundle": "/path/to/custom-ca-bundle.pem"
+    "password": "your-sftp-password"
   }
 }
