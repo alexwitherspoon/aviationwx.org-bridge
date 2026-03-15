@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.6.0] - 2025-02-20
 
+### Fixed
+- **Lint**: Use switch on protocol for staticcheck QF1003 (NormalizeUploadConfig)
+
 ### Removed
 - **FTPS support**: Deprecated and removed. SFTP only.
   - Config with `protocol: "ftps"` or `protocol: "ftp"` is migrated to SFTP (port 2222)
