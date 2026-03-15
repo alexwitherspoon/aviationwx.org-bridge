@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-03-15
+
+### Added
+- **Tests**: Unit tests for NormalizeUploadConfig (FTPS/FTP migration, port inference, defaults)
+
+### Fixed
+- **Config examples**: SFTP-only alignment—port 2222, removed tls and ca_bundle from all examples
+- **Config types**: Comment updated from "FTP credentials" to "SFTP credentials"
+- **Server tests**: Test payloads updated to SFTP-only (port 2222, no tls)
+
 ## [2.6.0] - 2025-02-20
 
 ### Fixed
