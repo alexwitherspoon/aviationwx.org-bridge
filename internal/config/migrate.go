@@ -90,7 +90,8 @@ func NormalizeUploadConfig(upload *Upload) {
 
 	// Migrate deprecated FTPS/FTP to SFTP
 	protocol := strings.ToLower(strings.TrimSpace(upload.Protocol))
-	if protocol == "" {
+	switch protocol {
+	case "":
 		// Infer from port for backward compatibility
 		switch upload.Port {
 		case 21, 2121, 990:
@@ -101,7 +102,7 @@ func NormalizeUploadConfig(upload *Upload) {
 		default:
 			upload.Protocol = "sftp"
 		}
-	} else if protocol == "ftps" || protocol == "ftp" {
+	case "ftps", "ftp":
 		upload.Protocol = "sftp"
 		if upload.Port == 21 || upload.Port == 2121 || upload.Port == 990 {
 			upload.Port = 2222
