@@ -99,10 +99,9 @@ func TestCameraAddUpdateDelete(t *testing.T) {
 			"capture_interval_seconds": 60,
 			"upload": {
 				"host": "upload.example.com",
-				"port": 2121,
+				"port": 2222,
 				"username": "user",
-				"password": "pass",
-				"tls": true
+				"password": "pass"
 			}
 		}`
 
@@ -132,10 +131,9 @@ func TestCameraAddUpdateDelete(t *testing.T) {
 			"capture_interval_seconds": 120,
 			"upload": {
 				"host": "upload.example.com",
-				"port": 2121,
+				"port": 2222,
 				"username": "user",
-				"password": "",
-				"tls": true
+				"password": ""
 			}
 		}`
 
@@ -539,7 +537,7 @@ func TestHandleTestUpload(t *testing.T) {
 			TestUpload: func(config.Upload) error { return nil },
 		})
 
-		uploadJSON := `{"host":"upload.example.com","port":2121,"username":"u","password":"p","tls":true}`
+		uploadJSON := `{"host":"upload.example.com","port":2222,"username":"u","password":"p"}`
 		req := httptest.NewRequest("POST", "/api/test/upload", bytes.NewBufferString(uploadJSON))
 		req.SetBasicAuth("admin", "test")
 		req.Header.Set("Content-Type", "application/json")
@@ -565,7 +563,7 @@ func TestHandleTestUpload(t *testing.T) {
 			},
 		})
 
-		uploadJSON := `{"host":"upload.example.com","port":2121,"username":"u","password":"p","tls":true}`
+		uploadJSON := `{"host":"upload.example.com","port":2222,"username":"u","password":"p"}`
 		req := httptest.NewRequest("POST", "/api/test/upload", bytes.NewBufferString(uploadJSON))
 		req.SetBasicAuth("admin", "test")
 		req.Header.Set("Content-Type", "application/json")

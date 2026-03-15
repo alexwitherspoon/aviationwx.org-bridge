@@ -16,10 +16,9 @@
       "capture_interval_seconds": 60,
       "upload": {
         "host": "upload.aviationwx.org",
-        "port": 21,
+        "port": 2222,
         "username": "your-sftp-username",
-        "password": "your-sftp-password",
-        "tls": true
+        "password": "your-sftp-password"
       }
     },
     {
@@ -40,10 +39,9 @@
       },
       "upload": {
         "host": "upload.aviationwx.org",
-        "port": 21,
+        "port": 2222,
         "username": "your-sftp-username-2",
-        "password": "your-sftp-password-2",
-        "tls": true
+        "password": "your-sftp-password-2"
       }
     }
   ],
