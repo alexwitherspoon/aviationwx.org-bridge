@@ -44,7 +44,7 @@ make check
 | `internal/camera/` | HTTP, RTSP, ONVIF camera implementations |
 | `internal/config/` | Config service, types, validation, migration |
 | `internal/scheduler/` | Orchestrator, upload worker, backoff, degraded mode |
-| `internal/upload/` | SFTP, FTPS clients |
+| `internal/upload/` | SFTP client |
 | `internal/web/` | Web server, static assets (JS/CSS) |
 | `internal/time/` | EXIF, SNTP, time authority |
 | `internal/queue/` | File-based queue manager |

@@ -207,7 +207,6 @@ func TestConfigServicePersistence(t *testing.T) {
 			Port:     2121,
 			Username: "testuser",
 			Password: "testpass",
-			TLS:      true,
 		},
 	}
 	svc1.AddCamera(cam)
@@ -424,7 +423,7 @@ func TestCameraPreview(t *testing.T) {
 			Name:    "Preview Test",
 			Type:    "http",
 			Enabled: true,
-			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2222, Username: "u", Password: "p"},
 		})
 
 		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
@@ -454,7 +453,7 @@ func TestCameraPreview(t *testing.T) {
 			Name:    "Preview Test",
 			Type:    "http",
 			Enabled: true,
-			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2222, Username: "u", Password: "p"},
 		})
 
 		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
@@ -494,7 +493,7 @@ func TestCameraPreview(t *testing.T) {
 			Name:    "Preview Test",
 			Type:    "http",
 			Enabled: true,
-			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2222, Username: "u", Password: "p"},
 		})
 
 		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)
@@ -519,7 +518,7 @@ func TestCameraPreview(t *testing.T) {
 			Name:    "Preview Test",
 			Type:    "http",
 			Enabled: true,
-			Upload:  &config.Upload{Host: "upload.example.com", Port: 2121, Username: "u", Password: "p", TLS: true},
+			Upload:  &config.Upload{Host: "upload.example.com", Port: 2222, Username: "u", Password: "p"},
 		})
 
 		req := httptest.NewRequest("GET", "/api/cameras/preview-cam/preview", nil)

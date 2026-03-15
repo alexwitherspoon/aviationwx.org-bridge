@@ -205,12 +205,6 @@ func TestDefaultUpload(t *testing.T) {
 	if upload.Port != 2222 {
 		t.Errorf("Port = %v, want 2222 (SFTP default)", upload.Port)
 	}
-	if !upload.TLS {
-		t.Error("TLS should be true (for FTPS fallback)")
-	}
-	if !upload.TLSVerify {
-		t.Error("TLSVerify should be true (for FTPS fallback)")
-	}
 }
 
 func TestDefaultWebConsole(t *testing.T) {

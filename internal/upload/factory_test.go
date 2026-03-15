@@ -55,6 +55,16 @@ func TestNewClientFromConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "unsupported protocol",
+			cfg: config.Upload{
+				Protocol: "http",
+				Host:     "upload.aviationwx.org",
+				Username: "testuser",
+				Password: "testpass",
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -108,15 +118,15 @@ func TestNewClientFromConfig_SFTPBasePath(t *testing.T) {
 			wantBasePath: "/files", // Default for SFTP (default protocol)
 		},
 		{
-			name: "FTPS no base path",
+			name: "FTPS migrated to SFTP with base path",
 			cfg: config.Upload{
 				Protocol: "ftps",
 				Host:     "upload.aviationwx.org",
 				Username: "testuser",
 				Password: "testpass",
-				BasePath: "/files", // Should be ignored for FTPS
+				BasePath: "/files",
 			},
-			wantBasePath: "", // FTPS doesn't use base path (set in factory but not applied)
+			wantBasePath: "/files", // FTPS migrated to SFTP, uses base path
 		},
 	}
 
@@ -133,8 +143,8 @@ func TestNewClientFromConfig_SFTPBasePath(t *testing.T) {
 				if sftpClient.config.BasePath != tt.wantBasePath {
 					t.Errorf("SFTPClient BasePath = %q, want %q", sftpClient.config.BasePath, tt.wantBasePath)
 				}
-			} else if tt.cfg.Protocol == "" || tt.cfg.Protocol == "sftp" {
-				t.Error("Expected SFTPClient for SFTP protocol")
+			} else {
+				t.Error("Expected SFTPClient")
 			}
 		})
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // MigrateFromLegacy migrates from old config.json format to new ConfigService format
@@ -80,40 +81,36 @@ func InitOrMigrate(baseDir string, legacyPath string) (*Service, error) {
 	return NewService(baseDir)
 }
 
-// NormalizeUploadConfig ensures upload config has sensible defaults and backward compatibility
-// This is called after loading camera configs to ensure protocol/port consistency
+// NormalizeUploadConfig ensures upload config has sensible defaults and backward compatibility.
+// Migrates deprecated FTPS/FTP to SFTP (port 2222).
 func NormalizeUploadConfig(upload *Upload) {
 	if upload == nil {
 		return
 	}
 
-	// Default to SFTP if protocol not specified
-	if upload.Protocol == "" {
-		// Check port to infer protocol for backward compatibility
+	// Migrate deprecated FTPS/FTP to SFTP
+	protocol := strings.ToLower(strings.TrimSpace(upload.Protocol))
+	if protocol == "" {
+		// Infer from port for backward compatibility
 		switch upload.Port {
-		case 21, 2121, 990: // Common FTP/FTPS ports
-			upload.Protocol = "ftps"
-		case 22, 2222: // Common SFTP ports
+		case 21, 2121, 990:
+			upload.Protocol = "sftp"
+			upload.Port = 2222 // Migrate FTPS port to SFTP
+		case 22, 2222:
 			upload.Protocol = "sftp"
 		default:
-			// No port specified or unknown port - default to SFTP
 			upload.Protocol = "sftp"
+		}
+	} else if protocol == "ftps" || protocol == "ftp" {
+		upload.Protocol = "sftp"
+		if upload.Port == 21 || upload.Port == 2121 || upload.Port == 990 {
+			upload.Port = 2222
 		}
 	}
 
-	// Set default port based on protocol if not specified
 	if upload.Port == 0 {
-		switch upload.Protocol {
-		case "sftp":
-			upload.Port = 2222 // aviationwx.org SFTP port
-		case "ftps":
-			upload.Port = 2121 // aviationwx.org FTPS port
-		default:
-			upload.Port = 2222 // Default to SFTP
-		}
+		upload.Port = 2222
 	}
-
-	// Set default timeouts if not specified
 	if upload.TimeoutConnectSeconds == 0 {
 		upload.TimeoutConnectSeconds = 60
 	}

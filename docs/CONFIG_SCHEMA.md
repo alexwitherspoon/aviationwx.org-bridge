@@ -64,7 +64,7 @@
 | `capture_interval_seconds` | integer | No | `60` | Capture interval (1-1800) |
 | `remote_path` | string | No | `"."` | Remote directory for uploads. Default uploads directly to base_path |
 | `image` | object | No | - | Image processing options |
-| `upload` | object | Yes | - | Per-camera upload credentials (SFTP/FTPS) |
+| `upload` | object | Yes | - | Per-camera upload credentials (SFTP) |
 | `queue` | object | No | - | Per-camera queue overrides |
 
 ### Camera Auth Object
@@ -114,36 +114,21 @@ Controls optional image resizing/quality for bandwidth management.
 
 ### Camera Upload Object
 
-Each camera has its own upload credentials. Supports both SFTP (recommended) and FTPS (legacy) protocols.
+Each camera has its own upload credentials. SFTP only (protocol "ftps"/"ftp" in config are migrated to SFTP).
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `protocol` | string | No | `"sftp"` | Upload protocol: `"sftp"` (recommended) or `"ftps"` (legacy) |
+| `protocol` | string | No | `"sftp"` | Upload protocol (SFTP only; "ftps"/"ftp" migrated to SFTP) |
 | `host` | string | Yes | - | Upload server hostname |
-| `port` | integer | No | (auto) | Server port (22/2222 for SFTP, 2121 for FTPS) |
+| `port` | integer | No | `2222` | SFTP port (aviationwx.org uses 2222) |
 | `username` | string | Yes | - | Upload username |
 | `password` | string | Yes | - | Upload password |
-| `base_path` | string | No | `"/files"` | SFTP only - Base directory for uploads (for chroot environments) |
-| `tls` | boolean | No | `true` | Enable FTPS (FTPS only, ignored for SFTP) |
-| `tls_verify` | boolean | No | `true` | Verify TLS certificate (FTPS only) |
-| `disable_epsv` | boolean | No | `true` | Use PASV instead of EPSV (FTPS only) |
+| `base_path` | string | No | `"/files"` | Base directory for uploads (chroot environments) |
 | `timeout_connect_seconds` | integer | No | `60` | Connection timeout |
 | `timeout_upload_seconds` | integer | No | `300` | Upload timeout (5 minutes) |
 
-#### Protocol Comparison
+#### Example Configuration
 
-| Feature | SFTP (Recommended) | FTPS (Legacy) |
-|---------|-------------------|---------------|
-| **Port** | 22 or 2222 (single) | 21 or 2121 + dynamic data ports |
-| **Encryption** | SSH | TLS |
-| **NAT Friendly** | ✅ Yes | ⚠️ Requires PASV mode |
-| **Firewall Rules** | ✅ Simple (single port) | ❌ Complex (dynamic ports) |
-| **Reliability** | ✅ Excellent | ⚠️ Moderate |
-| **Connection Drops** | ✅ Rare (SSH keep-alive) | ⚠️ Common (TCP issues) |
-
-#### Example Configurations
-
-**SFTP (Recommended):**
 ```json
 {
   "remote_path": ".",
@@ -158,25 +143,7 @@ Each camera has its own upload credentials. Supports both SFTP (recommended) and
 }
 ```
 
-**Note:** For chroot environments, set `base_path` to the writable directory within the chroot (e.g., `/files`). Set `remote_path` to `"."` to upload directly to that directory without a camera subdirectory.
-
-**FTPS (Legacy):**
-```json
-{
-  "upload": {
-    "protocol": "ftps",
-    "host": "upload.aviationwx.org",
-    "port": 2121,
-    "username": "your-username",
-    "password": "your-password",
-    "tls": true,
-    "tls_verify": true,
-    "disable_epsv": true
-  }
-}
-```
-
-**Note**: Default host is `upload.aviationwx.org`. Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) for credentials.
+**Note:** For chroot environments, set `base_path` to the writable directory within the chroot (e.g., `/files`). Set `remote_path` to `"."` to upload directly to that directory without a camera subdirectory. Default host is `upload.aviationwx.org`. Contact [contact@aviationwx.org](mailto:contact@aviationwx.org) for credentials.
 
 ### Global Object
 

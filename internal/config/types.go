@@ -32,7 +32,7 @@ type Camera struct {
 	// Image processing (bandwidth control)
 	Image *ImageProcessing `json:"image,omitempty"` // Resolution/quality settings
 
-	// Upload settings (per-camera FTP credentials)
+	// Upload settings (per-camera SFTP credentials)
 	Upload *Upload `json:"upload"` // FTP credentials for this camera
 
 	// Queue settings (optional, uses global defaults if not set)
@@ -62,41 +62,28 @@ type ImageProcessing struct {
 	Quality int `json:"quality,omitempty"`
 }
 
-// Upload represents upload settings (supports SFTP and FTPS)
+// Upload represents upload settings (SFTP only)
 type Upload struct {
-	Protocol string `json:"protocol,omitempty"` // "sftp" or "ftps", default: "sftp"
+	Protocol string `json:"protocol,omitempty"` // "sftp" (default); "ftps"/"ftp" migrated to SFTP
 	Host     string `json:"host"`               // Default: upload.aviationwx.org
-	Port     int    `json:"port,omitempty"`     // Default: 22 (SFTP) or 2121 (FTPS)
+	Port     int    `json:"port,omitempty"`     // Default: 2222 (aviationwx.org SFTP)
 	Username string `json:"username"`           // Upload username (provided by aviationwx.org)
 	Password string `json:"password"`           // Upload password (provided by aviationwx.org)
 
-	// SFTP-specific settings
-	BasePath string `json:"base_path,omitempty"` // SFTP only - Base directory for uploads (default: /files)
+	BasePath string `json:"base_path,omitempty"` // Base directory for uploads (default: /files)
 
-	// FTPS-specific settings (ignored for SFTP)
-	TLS       bool `json:"tls,omitempty"`        // FTPS only - Default: true
-	TLSVerify bool `json:"tls_verify,omitempty"` // FTPS only - Default: true
-
-	// Advanced settings (rarely needed)
-	CABundlePath          string `json:"ca_bundle_path,omitempty"`          // FTPS only
-	TimeoutConnectSeconds int    `json:"timeout_connect_seconds,omitempty"` // Default: 60
-	TimeoutUploadSeconds  int    `json:"timeout_upload_seconds,omitempty"`  // Default: 300 (5 minutes)
-	DisableEPSV           *bool  `json:"disable_epsv,omitempty"`            // FTPS only - Default: true (use standard PASV, set false to enable EPSV)
+	TimeoutConnectSeconds int `json:"timeout_connect_seconds,omitempty"` // Default: 60
+	TimeoutUploadSeconds  int `json:"timeout_upload_seconds,omitempty"`  // Default: 300 (5 minutes)
 }
 
-// DefaultUpload returns default upload settings
-// Defaults to SFTP as it's more reliable than FTPS
+// DefaultUpload returns default upload settings (SFTP)
 func DefaultUpload() Upload {
-	disableEPSV := true // Default to PASV mode for FTPS (proven reliable)
 	return Upload{
-		Protocol:              "sftp", // Default to SFTP (more reliable)
+		Protocol:              "sftp",
 		Host:                  "upload.aviationwx.org",
-		Port:                  2222,         // SFTP port
-		TLS:                   true,         // FTPS setting (ignored for SFTP)
-		TLSVerify:             true,         // FTPS setting (ignored for SFTP)
-		TimeoutConnectSeconds: 60,           // Generous timeout for slow networks
-		TimeoutUploadSeconds:  300,          // 5 minutes for large files on slow connections
-		DisableEPSV:           &disableEPSV, // FTPS setting - use standard PASV by default
+		Port:                  2222,
+		TimeoutConnectSeconds: 60,
+		TimeoutUploadSeconds:  300,
 	}
 }
 

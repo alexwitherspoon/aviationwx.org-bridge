@@ -183,7 +183,7 @@ func CaptureSnapshot(ctx context.Context, url string, timeout time.Duration) ([]
 Use descriptive test function names:
 ```go
 func TestCaptureSnapshot_Timeout_ReturnsError(t *testing.T) { }
-func TestUploadFTPS_Success_ReturnsNil(t *testing.T) { }
+func TestUploadSFTP_Success_ReturnsNil(t *testing.T) { }
 func TestBackoff_Exponential_CalculatesCorrectly(t *testing.T) { }
 ```
 
@@ -360,7 +360,7 @@ Consider separate logging for:
 - ✅ **Use**: ffmpeg (complex, mature software)
 - ❌ **Avoid**: Simple utility libraries (implement in stdlib)
 - ✅ **Use**: go-onvif (ONVIF is complex)
-- ✅ **Use**: goftp (FTPS with proper TLS handling)
+- ✅ **Use**: SFTP only (pkg/sftp)
 
 ---
 
@@ -379,7 +379,7 @@ Explain what and why vs. how.
 
 **Examples:**
 ```
-Fix FTPS upload timeout handling
+Fix SFTP upload timeout handling
 
 The upload timeout was not being respected when network
 conditions were poor. Added explicit timeout handling
@@ -400,7 +400,7 @@ Breaking change: Requires ONVIF credentials in config.
 ### Branch Naming
 
 - `feature/` - New features (e.g., `feature/onvif-support`)
-- `fix/` - Bug fixes (e.g., `fix/ftps-timeout`)
+- `fix/` - Bug fixes (e.g., `fix/sftp-timeout`)
 - `refactor/` - Code refactoring (e.g., `refactor/scheduler`)
 - `test/` - Test improvements (e.g., `test/add-integration-tests`)
 - `docs/` - Documentation updates (e.g., `docs/update-readme`)

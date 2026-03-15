@@ -820,15 +820,6 @@ function getCameraFormHtml(cam = null) {
                     Contact <a href="mailto:contact@aviationwx.org">contact@aviationwx.org</a> to get upload credentials for your camera.
                 </p>
                 
-                <div class="form-group">
-                    <label for="uploadProtocol">Upload Protocol</label>
-                    <select id="uploadProtocol" class="form-control" onchange="updateProtocolSettings()">
-                        <option value="sftp" ${(cam?.upload?.protocol || 'sftp') === 'sftp' ? 'selected' : ''}>SFTP (Recommended)</option>
-                        <option value="ftps" ${cam?.upload?.protocol === 'ftps' ? 'selected' : ''}>FTPS (Legacy)</option>
-                    </select>
-                    <p class="form-help">SFTP is more reliable on slow/unreliable connections</p>
-                </div>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="uploadUser">Username</label>
@@ -854,12 +845,12 @@ function getCameraFormHtml(cam = null) {
                 <div class="form-group">
                     <label for="uploadPort">Upload Server Port</label>
                     <input type="number" id="uploadPort" class="form-control" 
-                           value="${cam?.upload?.port || ((cam?.upload?.protocol || 'sftp') === 'sftp' ? 2222 : 2121)}"
+                           value="${cam?.upload?.port || 2222}"
                            min="1" max="65535" required>
-                    <p class="form-help" id="uploadPortHelp">SFTP port (default: 2222)</p>
+                    <p class="form-help">SFTP port (default: 2222)</p>
                 </div>
                 
-                <div class="form-group" id="uploadBasePathGroup" style="display: ${(cam?.upload?.protocol || 'sftp') === 'sftp' ? 'block' : 'none'}">
+                <div class="form-group">
                     <label for="uploadBasePath">Upload Directory</label>
                     <input type="text" id="uploadBasePath" class="form-control" 
                            value="${cam?.upload?.base_path || '/files'}"
@@ -893,28 +884,6 @@ function updateCameraTypeFields() {
     document.getElementById('onvifFields').style.display = type === 'onvif' ? 'block' : 'none';
 }
 
-function updateProtocolSettings() {
-    const protocol = document.getElementById('uploadProtocol').value;
-    const portInput = document.getElementById('uploadPort');
-    const portHelp = document.getElementById('uploadPortHelp');
-    const basePathGroup = document.getElementById('uploadBasePathGroup');
-    
-    if (protocol === 'sftp') {
-        if (portInput.value == '21' || portInput.value == '2121') {
-            portInput.value = '2222';
-        }
-        portHelp.textContent = 'SFTP port (default: 2222)';
-        if (basePathGroup) basePathGroup.style.display = 'block';
-    } else {
-        if (portInput.value == '22' || portInput.value == '2222') {
-            portInput.value = '2121';
-        }
-        portHelp.textContent = 'FTPS port (default: 2121)';
-        if (basePathGroup) basePathGroup.style.display = 'none';
-    }
-}
-
-
 function updateImagePreset() {
     const preset = document.getElementById('imagePreset').value;
     const customDiv = document.getElementById('customImageSettings');
@@ -947,7 +916,6 @@ async function saveCamera(event, existingId = null) {
     event.preventDefault();
     
     const type = document.getElementById('camType').value;
-    const protocol = document.getElementById('uploadProtocol')?.value || 'sftp';
     const basePath = document.getElementById('uploadBasePath')?.value || '/files';
     const camera = {
         id: document.getElementById('camId').value.toLowerCase().replace(/\s+/g, '-'),
@@ -956,13 +924,12 @@ async function saveCamera(event, existingId = null) {
         enabled: document.getElementById('camEnabled').checked,
         capture_interval_seconds: parseInt(document.getElementById('camInterval').value, 10),
         upload: {
-            protocol: protocol,
+            protocol: 'sftp',
             host: document.getElementById('uploadHost').value || 'upload.aviationwx.org',
-            port: parseInt(document.getElementById('uploadPort').value, 10) || (protocol === 'sftp' ? 2222 : 2121),
+            port: parseInt(document.getElementById('uploadPort').value, 10) || 2222,
             username: document.getElementById('uploadUser').value,
             password: document.getElementById('uploadPass').value || undefined,
-            tls: true,
-            base_path: protocol === 'sftp' ? basePath : undefined,
+            base_path: basePath,
         }
     };
     
@@ -1107,25 +1074,22 @@ function buildCameraConfigFromForm() {
 async function testUpload() {
     const resultDiv = document.getElementById('uploadTestResult');
     resultDiv.innerHTML = '<div class="test-result" style="background: var(--color-bg)">Testing connection...</div>';
-    
-    const protocol = document.getElementById('uploadProtocol')?.value || 'sftp';
-    const port = parseInt(document.getElementById('uploadPort').value) || (protocol === 'sftp' ? 2222 : 2121);
-    
+
     try {
         const result = await api('/test/upload', {
             method: 'POST',
             body: JSON.stringify({
-                protocol: protocol,
+                protocol: 'sftp',
                 host: document.getElementById('uploadHost').value || 'upload.aviationwx.org',
-                port: port,
+                port: parseInt(document.getElementById('uploadPort').value) || 2222,
                 username: document.getElementById('uploadUser').value,
                 password: document.getElementById('uploadPass').value,
-                tls: true,
+                base_path: document.getElementById('uploadBasePath')?.value || '/files',
             }),
         });
-        
+
         if (result.status === 'ok') {
-            resultDiv.innerHTML = `<div class="test-result success">✓ ${protocol.toUpperCase()} connection successful!</div>`;
+            resultDiv.innerHTML = '<div class="test-result success">✓ SFTP connection successful!</div>';
         } else {
             resultDiv.innerHTML = `<div class="test-result error">✗ ${result.error || 'Connection failed'}</div>`;
         }
@@ -1246,10 +1210,10 @@ function showSetupWizard() {
             </p>
             <ul style="margin-left: var(--space-lg); margin-bottom: var(--space-lg); color: var(--color-text-muted);">
                 <li>Your camera's snapshot URL or RTSP stream address</li>
-                <li>FTP credentials from aviationwx.org</li>
+                <li>SFTP credentials from aviationwx.org</li>
             </ul>
             <p style="margin-bottom: var(--space-lg);">
-                Don't have FTP credentials yet? 
+                Don't have SFTP credentials yet? 
                 Contact <a href="mailto:contact@aviationwx.org">contact@aviationwx.org</a> to get them.
             </p>
         </div>

@@ -11,24 +11,20 @@ type Client interface {
 	// Returns error if upload or rename fails
 	Upload(remotePath string, data []byte) error
 
-	// TestConnection tests the FTPS connection and authentication
+	// TestConnection tests the connection and authentication
 	// Returns error if connection fails
 	TestConnection() error
 }
 
-// Config represents upload configuration
+// Config represents upload configuration (SFTP)
 type Config struct {
 	Host                  string
 	Port                  int
 	Username              string
 	Password              string
-	TLS                   bool
-	TLSVerify             bool
-	CABundlePath          string
 	TimeoutConnectSeconds int
 	TimeoutUploadSeconds  int
-	DisableEPSV           bool   // Disable Extended Passive mode, use PASV instead
-	BasePath              string // Base directory for uploads (SFTP only, default: /files)
+	BasePath              string // Base directory for uploads (default: /files)
 }
 
 // Error types for upload operations
