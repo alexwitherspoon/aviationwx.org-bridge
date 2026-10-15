@@ -16,7 +16,7 @@ permissions:
 jobs:
   test:
     name: Test & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -121,7 +121,7 @@ jobs:
 
   build:
     name: Build (${{ matrix.goos }}/${{ matrix.goarch }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [test]
     strategy:
       matrix:
@@ -154,7 +154,7 @@ jobs:
 
   docker:
     name: Docker Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [test]
     steps:
       - name: Checkout code
@@ -181,7 +181,7 @@ jobs:
 
   publish:
     name: Publish Docker Images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [test, build, docker]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
