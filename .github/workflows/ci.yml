@@ -27,8 +27,11 @@ jobs:
           go-version: '1.26'
           cache-dependency-path: go.sum
 
-      - name: Install exiftool
-        run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          # exiftool for Go tests; jq and util-linux (flock) for the bats shell tests
+          sudo apt-get install -y libimage-exiftool-perl jq util-linux
 
       - name: Download dependencies
         run: go mod download

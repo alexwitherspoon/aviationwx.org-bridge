@@ -36,6 +36,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Install shell test dependencies
+        run: |
+          sudo apt-get update
+          # jq and util-linux (flock) for the bats shell tests
+          sudo apt-get install -y jq util-linux
+
       - name: Run shell (Bats) tests
         run: npm run test:sh
       
