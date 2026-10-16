@@ -3,7 +3,7 @@ module github.com/alexwitherspoon/AviationWX.org-Bridge
 go 1.26.0
 
 require (
-	github.com/beevik/ntp v1.5.0
+	github.com/beevik/ntp v1.6.0
 	github.com/hashicorp/mdns v1.0.7
 	github.com/korylprince/go-onvif v0.1.5
 	github.com/pkg/sftp v1.13.11
