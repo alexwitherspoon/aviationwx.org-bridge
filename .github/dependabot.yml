@@ -55,3 +55,40 @@ updates:
       - dependencies
       - docker
     open-pull-requests-limit: 5
+
+  # e2e harness Dockerfiles (not covered by /docker)
+  - package-ecosystem: docker
+    directory: /docker/wll-simulator
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - dependencies
+      - docker
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: docker
+    directory: /docker/bridge-api-mock
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - dependencies
+      - docker
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: docker
+    directory: /docker/camera-simulator
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - dependencies
+      - docker
+    open-pull-requests-limit: 3

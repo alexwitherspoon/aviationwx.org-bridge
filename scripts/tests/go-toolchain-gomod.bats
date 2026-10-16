@@ -10,19 +10,19 @@
 }
 
 @test "toolchain older than go.mod fails check" {
-  REQ_GO=1.26.0
-  HAVE_GO=1.25.0
+  REQ_GO=1.27.2
+  HAVE_GO=1.26.0
   [ "$(printf '%s\n' "$REQ_GO" "$HAVE_GO" | sort -V | head -n1)" != "$REQ_GO" ]
 }
 
 @test "toolchain equal to go.mod passes check" {
-  REQ_GO=1.26.0
-  HAVE_GO=1.26.0
+  REQ_GO=1.27.2
+  HAVE_GO=1.27.2
   [ "$(printf '%s\n' "$REQ_GO" "$HAVE_GO" | sort -V | head -n1)" = "$REQ_GO" ]
 }
 
 @test "toolchain newer than go.mod passes check" {
-  REQ_GO=1.26.0
-  HAVE_GO=1.27.0
+  REQ_GO=1.27.2
+  HAVE_GO=1.28.0
   [ "$(printf '%s\n' "$REQ_GO" "$HAVE_GO" | sort -V | head -n1)" = "$REQ_GO" ]
 }
