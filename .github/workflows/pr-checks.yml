@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   pr-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     
     steps:
       - name: Checkout code
@@ -30,11 +30,17 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Install shell test dependencies
+        run: |
+          sudo apt-get update
+          # jq and util-linux (flock) for the bats shell tests
+          sudo apt-get install -y jq util-linux
 
       - name: Run shell (Bats) tests
         run: npm run test:sh
