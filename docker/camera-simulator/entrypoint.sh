@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-mediamtx /mediamtx.yml &
+/mediamtx /mediamtx.yml &
 sleep 1
 
 # Publish looping RTSP for cam-b from first sequence image.
