@@ -57,7 +57,7 @@ jobs:
           version: v2.14.0
 
       - name: Run Go tests
-        run: go test -v -race -coverprofile=coverage.out ./...
+        run: go test -v -race ./...
 
       - name: Set up Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -73,14 +73,6 @@ jobs:
 
       - name: Run shell (Bats) tests
         run: npm run test:sh
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          files: ./coverage.out
-          flags: unittests
-          name: codecov-umbrella
-        continue-on-error: true
 
       - name: Check for required files
         run: |
