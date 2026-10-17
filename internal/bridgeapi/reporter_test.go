@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
 )
 
 func testConfigService(t *testing.T, key, base string) *config.Service {

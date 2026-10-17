@@ -1,4 +1,4 @@
-module github.com/alexwitherspoon/AviationWX.org-Bridge
+module github.com/alexwitherspoon/aviationwx-bridge
 
 go 1.27.2
 

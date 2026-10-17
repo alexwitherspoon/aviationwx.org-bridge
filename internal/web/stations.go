@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 func (s *Server) handleStations(w http.ResponseWriter, r *http.Request) {

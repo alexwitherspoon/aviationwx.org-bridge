@@ -15,13 +15,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/camera"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/deploy"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/paths"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/station"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/upload"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/camera"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/deploy"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/paths"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/station"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
 )
 
 //go:embed static/*

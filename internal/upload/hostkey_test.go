@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/update"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/update"
 	"golang.org/x/crypto/ssh"
 )
 

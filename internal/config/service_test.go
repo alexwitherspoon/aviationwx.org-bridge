@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/hardware"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/hardware"
 )
 
 func TestNewService(t *testing.T) {

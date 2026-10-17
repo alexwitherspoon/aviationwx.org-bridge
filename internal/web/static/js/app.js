@@ -2982,7 +2982,7 @@ function showManualUpdateDialog(updateInfo) {
     if (confirm(body)) {
         const urlFn = window.releaseNotesURL;
         const fallbackUrl = window.DEFAULT_RELEASE_NOTES_URL
-            || 'https://github.com/alexwitherspoon/aviationwx.org-bridge/releases';
+            || 'https://github.com/alexwitherspoon/aviationwx-bridge/releases';
         const url = typeof urlFn === 'function' ? urlFn(updateInfo) : fallbackUrl;
         window.open(url, '_blank', 'noopener');
     }

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/bridgeapi"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/bridgeapi"
 )
 
 func TestPopReadyOnePerSourcePerInterval(t *testing.T) {

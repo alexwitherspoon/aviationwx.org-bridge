@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/test/e2e/harness"
+	"github.com/alexwitherspoon/aviationwx-bridge/test/e2e/harness"
 )
 
 func TestUploadIdentity_RosterCachedAndAPIOk(t *testing.T) {

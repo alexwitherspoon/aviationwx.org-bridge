@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
 )
 
 // healthIndicators are fields extracted from bridge getStatus() for /healthz.

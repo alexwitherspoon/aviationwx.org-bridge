@@ -1,5 +1,5 @@
 # AviationWX.org Bridge - Docker Compose Configuration
-# https://github.com/alexwitherspoon/AviationWX.org-Bridge
+# https://github.com/alexwitherspoon/aviationwx-bridge
 
 services:
   bridge:
