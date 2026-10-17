@@ -196,13 +196,13 @@ jobs:
           body: |
             ## AviationWX.org Bridge ${{ steps.version.outputs.VERSION }}
             
-            <!-- AVIATIONWX_RELEASE_META {"version": "${{ steps.version.outputs.VERSION_NUM }}", "min_host_version": "2.3", "critical": ${{ steps.version.outputs.CRITICAL }}, "force_update": false, "rollback_safe": true} -->
+            <!-- AVIATIONWX_RELEASE_META {"version": "${{ steps.version.outputs.VERSION_NUM }}", "min_host_version": "2.4", "critical": ${{ steps.version.outputs.CRITICAL }}, "force_update": false, "rollback_safe": true} -->
             
             ### Installation
             
             #### Supervised Install (single-board computer, recommended)
             ```bash
-            curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx.org-bridge/main/scripts/install.sh | sudo bash
+            curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
             ```
             
             #### Docker
@@ -240,7 +240,7 @@ jobs:
             
             ### Changelog
             
-            See [CHANGELOG.md](https://github.com/alexwitherspoon/aviationwx.org-bridge/blob/main/CHANGELOG.md) for details.
+            See [CHANGELOG.md](https://github.com/alexwitherspoon/aviationwx-bridge/blob/main/CHANGELOG.md) for details.
           files: |
             dist/aviationwx-org-bridge-*
             dist/checksums.txt

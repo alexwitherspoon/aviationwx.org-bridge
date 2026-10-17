@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/test/e2e/harness"
+	"github.com/alexwitherspoon/aviationwx-bridge/test/e2e/harness"
 	"golang.org/x/crypto/ssh"
 )
 

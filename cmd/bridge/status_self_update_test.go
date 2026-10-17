@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 func TestBuildStatus_includesSelfUpdateEnabled(t *testing.T) {

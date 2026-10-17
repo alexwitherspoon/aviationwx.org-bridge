@@ -278,17 +278,18 @@ func UploadImage(ctx context.Context, data []byte, path string) error {
 
 Use the correct form depending on context:
 
-### `aviationwx.org-bridge` (with period)
+### `aviationwx-bridge` (repo)
 
-**Use only for GitHub URLs—the repo name cannot be changed.**
+**Use for the GitHub repository and GitHub-hosted URLs.**
 
-- **GitHub repo path**: `alexwitherspoon/aviationwx.org-bridge`, `github.com/.../aviationwx.org-bridge`
-- **API URLs**: `api.github.com/repos/alexwitherspoon/aviationwx.org-bridge/...`
-- **Raw content URLs**: `raw.githubusercontent.com/.../aviationwx.org-bridge/...`
+- **GitHub repo path**: `alexwitherspoon/aviationwx-bridge`, `github.com/.../aviationwx-bridge`
+- **API URLs**: `api.github.com/repos/alexwitherspoon/aviationwx-bridge/...`
+- **Raw content URLs**: `raw.githubusercontent.com/.../aviationwx-bridge/...`
+- **Go module path**: `github.com/alexwitherspoon/aviationwx-bridge`
 
-### `aviationwx-org-bridge` (with hyphen)
+### `aviationwx-org-bridge` (hyphen)
 
-**Use everywhere else.** Hyphens avoid case-sensitivity and portability issues.
+**Use for build artifacts.** Hyphens avoid case-sensitivity and portability issues.
 
 - **GHCR image path**: `ghcr.io/alexwitherspoon/aviationwx-org-bridge`
 - **Container name**: `aviationwx-org-bridge`
@@ -303,7 +304,8 @@ Use the correct form depending on context:
 
 | Context | Form |
 |---------|------|
-| GitHub URL, repo path | `aviationwx.org-bridge` |
+| GitHub URL, repo path | `aviationwx-bridge` |
+| Go module path | `github.com/alexwitherspoon/aviationwx-bridge` |
 | GHCR image path | `aviationwx-org-bridge` |
 | Container name | `aviationwx-org-bridge` |
 | Binary name | `aviationwx-org-bridge-{arch}` |

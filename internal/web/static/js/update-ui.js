@@ -3,7 +3,7 @@
  */
 
 export const DEFAULT_RELEASE_NOTES_URL =
-    'https://github.com/alexwitherspoon/aviationwx.org-bridge/releases';
+    'https://github.com/alexwitherspoon/aviationwx-bridge/releases';
 
 function isSafeHTTPURL(url) {
     try {

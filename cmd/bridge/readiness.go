@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
 )
 
 // readinessWithNilOrchestrator implements /readyz when the orchestrator was never started

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/hardware"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/hardware"
 )
 
 // Service provides centralized config management with file-per-camera storage

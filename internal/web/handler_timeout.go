@@ -3,7 +3,7 @@ package web
 import (
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
 )
 
 type timeoutResult struct {

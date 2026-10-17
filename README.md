@@ -30,7 +30,7 @@ Run one command and the bridge looks after itself: the host supervisor checks fo
 One command installs everything:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Bridge/main/scripts/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
 ```
 
 **This script will:**

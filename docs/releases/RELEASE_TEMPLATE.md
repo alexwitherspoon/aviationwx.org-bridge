@@ -17,7 +17,7 @@ Each release should follow this structure:
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx.org-bridge/compare/v2.10.1...v2.11.0
+https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.10.1...v2.11.0
 ```
 
 CI (`.github/workflows/release.yml`) emits a default `AVIATIONWX_RELEASE_META` block when a tag is pushed. Edit the published release notes after CI if you need `deprecates`, `critical`, or extra operator context.
@@ -89,7 +89,7 @@ Restores SFTP SSH host key verification via HTTPS roster.
 
 ## Full Changelog
 
-https://github.com/alexwitherspoon/aviationwx.org-bridge/compare/v2.10.1...v2.11.0
+https://github.com/alexwitherspoon/aviationwx-bridge/compare/v2.10.1...v2.11.0
 ```
 
 ## Notes

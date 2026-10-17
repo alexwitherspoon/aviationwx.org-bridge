@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/bridgeapi"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/bridgeapi"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 type fakePoster struct {
