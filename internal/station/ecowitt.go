@@ -156,6 +156,10 @@ func parseEcowittObservedAt(raw json.RawMessage) (time.Time, bool) {
 	return time.Time{}, false
 }
 
+// parseEcowittTimeVal parses the gateway's common_list 0x18 date/time string.
+// NOTE: 0x18 carries no zone. We assume UTC pending real-hardware validation;
+// if gateways report device-local wall clock, this mis-stamps observed_at by
+// the site offset and needs a configurable timezone.
 func parseEcowittTimeVal(val string) (time.Time, bool) {
 	val = strings.TrimSpace(val)
 	if val == "" {

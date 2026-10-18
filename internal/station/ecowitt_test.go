@@ -87,11 +87,36 @@ func TestEcowittPollRejectsNonLivedata(t *testing.T) {
 }
 
 func TestParseEcowittTimeVal(t *testing.T) {
-	got, ok := parseEcowittTimeVal("2024-11-25T20:41:16")
-	if !ok || got.Year() != 2024 {
-		t.Fatalf("got %v ok=%v", got, ok)
+	tests := []struct {
+		name string
+		val  string
+		want time.Time
+		ok   bool
+	}{
+		{
+			name: "gateway space format assumed UTC",
+			val:  "2024-11-25 20:41:16",
+			want: time.Date(2024, 11, 25, 20, 41, 16, 0, time.UTC),
+			ok:   true,
+		},
+		{
+			name: "ISO T format assumed UTC",
+			val:  "2024-11-25T20:41:16",
+			want: time.Date(2024, 11, 25, 20, 41, 16, 0, time.UTC),
+			ok:   true,
+		},
+		{name: "empty", val: "", ok: false},
+		{name: "garbage", val: "not-a-time", ok: false},
 	}
-	if _, ok := parseEcowittTimeVal(""); ok {
-		t.Fatal("empty must fail")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := parseEcowittTimeVal(tt.val)
+			if ok != tt.ok {
+				t.Fatalf("ok = %v, want %v", ok, tt.ok)
+			}
+			if tt.ok && !got.Equal(tt.want) {
+				t.Fatalf("got %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
