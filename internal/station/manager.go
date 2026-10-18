@@ -808,7 +808,7 @@ func (w *stationWorker) tick(ctx context.Context) {
 	}
 
 	// Station timestamp required for POST. Gap is safer than inventing observed_at.
-	if w.cfg.Txid != nil && obs.ObservedAt.IsZero() {
+	if obs.ObservedAt.IsZero() {
 		msg := "missing observation timestamp (station ts); skipped weather POST"
 		w.mgr.setStatus(w.cfg.ID, func(s *StationStatus) {
 			s.Degraded = true
@@ -821,7 +821,7 @@ func (w *stationWorker) tick(ctx context.Context) {
 		return
 	}
 
-	if w.cfg.Txid != nil && w.mgr.poster != nil && w.mgr.poster.APIConfigured() {
+	if w.mgr.poster != nil && w.mgr.poster.APIConfigured() {
 		// Fresh timeout: pollCtx may be nearly spent after a slow Davis fetch.
 		postCtx, postCancel := context.WithTimeout(ctx, weatherPostTimeout)
 		postErr := w.mgr.postObservation(postCtx, w.cfg, obs)

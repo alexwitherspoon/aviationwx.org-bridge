@@ -139,6 +139,132 @@ func TestManagerPollAndPost(t *testing.T) {
 	}
 }
 
+func TestEcowittPollAndPost(t *testing.T) {
+	fixture, err := os.ReadFile(filepath.Join("testdata", "ecowitt_get_livedata_info.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(fixture)
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	svc, err := config.NewService(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := svc.AddStation(config.Station{
+		ID:                  "station-ecowitt",
+		Name:                "Ecowitt",
+		Type:                config.StationTypeEcowittGateway,
+		Enabled:             true,
+		Host:                srv.Listener.Addr().String(),
+		PollIntervalSeconds: 10,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	poster := &fakePoster{configured: true}
+	mgr := NewManager(ManagerConfig{ConfigService: svc, Poster: poster})
+	ecowitt := NewEcowitt()
+	ecowitt.client = srv.Client()
+	mgr.providers[ProviderEcowittGateway] = ecowitt
+
+	mgr.SyncFromConfig()
+	defer mgr.Stop()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		poster.mu.Lock()
+		n := len(poster.posts)
+		poster.mu.Unlock()
+		if n > 0 {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	poster.mu.Lock()
+	if len(poster.posts) == 0 {
+		poster.mu.Unlock()
+		t.Fatal("expected weather POST for ecowitt_gateway")
+	}
+	got := poster.posts[0]
+	if got.SourceID != st.ID {
+		t.Errorf("source_id = %s", got.SourceID)
+	}
+	if got.Provider != ProviderEcowittGateway {
+		t.Errorf("provider = %s, want %s", got.Provider, ProviderEcowittGateway)
+	}
+	if got.Sample != nil {
+		t.Errorf("sample should be omitted on wire, got %+v", got.Sample)
+	}
+	if got.ProviderMeta == nil || got.ProviderMeta["raw"] == nil {
+		t.Error("expected provider_meta.raw on wire")
+	}
+	if got.ObservedAt.IsZero() {
+		t.Error("expected observed_at from gateway 0x18")
+	}
+	poster.mu.Unlock()
+}
+
+func TestEcowittPollMissingTimeSkipsPost(t *testing.T) {
+	body := []byte(`{"common_list":[{"id":"0x02","val":"20.0","unit":"C"}],"wh25":[{"intemp":"21.0","unit":"C","inhumi":"50%","abs":"1000 hPa","rel":"1000 hPa"}]}`)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(body)
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	svc, err := config.NewService(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := svc.AddStation(config.Station{
+		ID:                  "station-ecowitt",
+		Name:                "Ecowitt",
+		Type:                config.StationTypeEcowittGateway,
+		Enabled:             true,
+		Host:                srv.Listener.Addr().String(),
+		PollIntervalSeconds: 10,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	poster := &fakePoster{configured: true}
+	mgr := NewManager(ManagerConfig{ConfigService: svc, Poster: poster})
+	ecowitt := NewEcowitt()
+	ecowitt.client = srv.Client()
+	mgr.providers[ProviderEcowittGateway] = ecowitt
+
+	mgr.SyncFromConfig()
+	defer mgr.Stop()
+
+	deadline := time.Now().Add(2 * time.Second)
+	degraded := false
+	for time.Now().Before(deadline) {
+		for _, s := range mgr.StatusSnapshot() {
+			if s.ID == st.ID && s.Degraded {
+				degraded = true
+			}
+		}
+		if degraded {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if !degraded {
+		t.Fatal("expected ecowitt station to degrade when gateway time is missing")
+	}
+	poster.mu.Lock()
+	defer poster.mu.Unlock()
+	if len(poster.posts) != 0 {
+		t.Fatalf("expected no weather POST without gateway time, got %d", len(poster.posts))
+	}
+}
+
 func TestFlushRingPacesCatchupOnePerSecondPerSource(t *testing.T) {
 	dir := t.TempDir()
 	svc, err := config.NewService(dir)
