@@ -19,7 +19,9 @@ const (
 	ecowittLivedataPath    = "/get_livedata_info"
 	ecowittVersionPath     = "/get_version"
 	ecowittAPIMeta         = "ecowitt_gateway_http_v1"
-	ecowittItemTime        = "0x18"
+	// Gateway time id is "0x18" (hex) or its decimal form "24"; recognize both.
+	ecowittItemTime    = "0x18"
+	ecowittItemTimeDec = "24"
 )
 
 // Ecowitt polls Ecowitt / Ambient Fine Offset gateways over LAN HTTP.
@@ -146,7 +148,7 @@ func parseEcowittObservedAt(raw json.RawMessage) (time.Time, bool) {
 	}
 	for _, item := range top.CommonList {
 		id := strings.ToLower(strings.TrimSpace(item.ID))
-		if id != ecowittItemTime && id != "24" {
+		if id != ecowittItemTime && id != ecowittItemTimeDec {
 			continue
 		}
 		if t, ok := parseEcowittTimeVal(item.Val); ok {
