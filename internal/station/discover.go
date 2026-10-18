@@ -407,7 +407,7 @@ func discoverEcowittHTTPProbe(ctx context.Context, targets []string, onFound fun
 		return
 	}
 	total := len(targets)
-	client := &http.Client{Timeout: probeHTTPTimeout}
+	client := NewLANClient(probeHTTPTimeout)
 	sem := make(chan struct{}, probeMaxConcurrency)
 	var (
 		wg       sync.WaitGroup
@@ -431,6 +431,7 @@ func discoverEcowittHTTPProbe(ctx context.Context, targets []string, onFound fun
 			onProgress(n, total)
 		}
 	}
+scanLoop:
 	for _, ip := range targets {
 		if ctx.Err() != nil {
 			break
@@ -438,7 +439,7 @@ func discoverEcowittHTTPProbe(ctx context.Context, targets []string, onFound fun
 		ip := ip
 		select {
 		case <-ctx.Done():
-			return
+			break scanLoop
 		case sem <- struct{}{}:
 		}
 		wg.Add(1)
