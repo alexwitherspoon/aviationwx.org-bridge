@@ -120,3 +120,37 @@ func TestParseEcowittTimeVal(t *testing.T) {
 		})
 	}
 }
+
+func TestEcowittURL(t *testing.T) {
+	cases := []struct {
+		in   string
+		want string
+		err  bool
+	}{
+		{"192.168.1.60", "http://192.168.1.60:80/get_livedata_info", false},
+		{"192.168.1.60:8080", "http://192.168.1.60:8080/get_livedata_info", false},
+		{"http://example.local:8080/ignored", "http://example.local:8080/get_livedata_info", false},
+		{"https://gw.local", "https://gw.local/get_livedata_info", false},
+		{"2001:db8::1", "http://[2001:db8::1]:80/get_livedata_info", false},
+		{"[2001:db8::1]", "http://[2001:db8::1]:80/get_livedata_info", false},
+		{"[2001:db8::1]:8080", "http://[2001:db8::1]:8080/get_livedata_info", false},
+		{"", "", true},
+		{"ftp://gw.local", "", true},
+		{"192.168.1.60/other", "", true},
+	}
+	for _, tc := range cases {
+		u, err := ecowittURL(tc.in, ecowittLivedataPath)
+		if tc.err {
+			if err == nil {
+				t.Fatalf("%q: expected error, got %s", tc.in, u)
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatalf("%q: %v", tc.in, err)
+		}
+		if u != tc.want {
+			t.Fatalf("%q: got %s want %s", tc.in, u, tc.want)
+		}
+	}
+}

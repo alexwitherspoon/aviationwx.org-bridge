@@ -155,6 +155,30 @@ func TestDiscoverStationsStreamEmitsProgress(t *testing.T) {
 	}
 }
 
+func TestDiscoverEcowittStreamEmitsPhases(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var types []string
+	var notes []string
+	err := DiscoverStationsStream(ctx, DiscoverOptions{Type: ProviderEcowittGateway}, func(ev DiscoverEvent) {
+		types = append(types, ev.Type)
+		if ev.Type == "note" {
+			notes = append(notes, ev.Message)
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(types) == 0 || types[len(types)-1] != "done" {
+		t.Fatalf("events = %v", types)
+	}
+	joined := strings.Join(notes, " ")
+	if !strings.Contains(joined, "HTTP") {
+		t.Fatalf("expected HTTP-only discovery note, got %v", notes)
+	}
+}
+
 func TestDiscoverStationsNotesWhenEmptySubnet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
