@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 // TestWeatherRequestGoldenDavisWLL locks the exact POST /v1/bridge/weather body

@@ -389,5 +389,5 @@ curl -fsSL https://raw.githubusercontent.com/.../install.sh | sudo bash
 
 ## Questions?
 
-- File an issue: https://github.com/alexwitherspoon/AviationWX.org-Bridge/issues
+- File an issue: https://github.com/alexwitherspoon/aviationwx-bridge/issues
 - Email: contact@aviationwx.org

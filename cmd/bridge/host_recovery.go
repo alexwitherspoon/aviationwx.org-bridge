@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/paths"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/paths"
 )
 
 const recoveryExhaustedFilename = "recovery-exhausted.json"

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.0] - 2026-10-17
+
+### Changed
+- **Repository rename**: `aviationwx.org-bridge` → `aviationwx-bridge`
+  - GitHub URL: `github.com/alexwitherspoon/aviationwx-bridge`
+  - Go module path: `github.com/alexwitherspoon/aviationwx-bridge`
+  - GHCR image, container, and binary names unchanged (`aviationwx-org-bridge`)
+- **Supervisor**: GitHub API calls now follow redirects (`curl -sfL`), so bridge installs keep updating after the repo rename
+- **CI**: Remove the Codecov upload step (coverage was not enforced)
+
 ## [2.12.0] - 2026-06-27
 
 Upload roster and SSH host-key handling for multi-target bridges, plus operator fixes for roster sync and the Settings SSH keys panel. Supervised installs on `latest` pick this up on the next daily update; `sudo aviationwx update` applies immediately on a reachable host.

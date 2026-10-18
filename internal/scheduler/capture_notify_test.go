@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
 )
 
 func TestEligibleForPendingGateWake(t *testing.T) {

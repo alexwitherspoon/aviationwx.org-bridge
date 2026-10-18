@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-readonly SCRIPT_VERSION="2.3"
-readonly GITHUB_REPO="alexwitherspoon/aviationwx.org-bridge"
+readonly SCRIPT_VERSION="2.4"
+readonly GITHUB_REPO="alexwitherspoon/aviationwx-bridge"
 readonly IMAGE_NAME="ghcr.io/alexwitherspoon/aviationwx-org-bridge"
 readonly CONTAINER_NAME="aviationwx-org-bridge"
 readonly DATA_DIR="/data/aviationwx"
@@ -327,7 +327,7 @@ get_latest_release_json() {
     local attempt=0
     while [ $attempt -lt 3 ]; do
         local raw
-        raw=$(curl -sf --max-time 10 \
+        raw=$(curl -sfL --max-time 10 \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=1" 2>/dev/null)
         if [ -n "$raw" ]; then
@@ -504,7 +504,7 @@ check_release_workflow_status() {
     # Try to check GitHub Actions status (requires gh CLI or API)
     # Fallback: check if release exists (API uses v-prefixed tags)
     local release_exists
-    release_exists=$(curl -sf --max-time 5 \
+    release_exists=$(curl -sfL --max-time 5 \
         "https://api.github.com/repos/${GITHUB_REPO}/releases/tags/v${version}" 2>/dev/null)
     
     if [ -n "$release_exists" ]; then

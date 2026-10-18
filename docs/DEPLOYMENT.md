@@ -20,7 +20,7 @@ Runs on a Raspberry Pi or a comparable single-board computer (SBC). Run one comm
 ### One-Command Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/AviationWX.org-Bridge/main/scripts/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/alexwitherspoon/aviationwx-bridge/main/scripts/install.sh | sudo bash
 ```
 
 This script:
@@ -582,6 +582,6 @@ If queue shows "Critical" status frequently:
 
 ## Support
 
-- **Documentation**: [github.com/alexwitherspoon/AviationWX.org-Bridge](https://github.com/alexwitherspoon/AviationWX.org-Bridge)
-- **Issues**: [GitHub Issues](https://github.com/alexwitherspoon/AviationWX.org-Bridge/issues)
+- **Documentation**: [github.com/alexwitherspoon/aviationwx-bridge](https://github.com/alexwitherspoon/aviationwx-bridge)
+- **Issues**: [GitHub Issues](https://github.com/alexwitherspoon/aviationwx-bridge/issues)
 - **Credentials**: [contact@aviationwx.org](mailto:contact@aviationwx.org)

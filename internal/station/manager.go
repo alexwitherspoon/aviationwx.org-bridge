@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/bridgeapi"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/bridgeapi"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
 )
 
 // WeatherPoster posts weather observations to the AviationWX bridge API.

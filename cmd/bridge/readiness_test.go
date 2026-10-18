@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
 )
 
 func TestReadinessWithNilOrchestrator(t *testing.T) {

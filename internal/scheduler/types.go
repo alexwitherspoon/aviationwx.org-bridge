@@ -3,7 +3,7 @@ package scheduler
 import (
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/image"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/image"
 )
 
 // CameraConfig represents camera configuration needed by scheduler

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/logger"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/web"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/logger"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/web"
 )
 
 // TestBridgeWithConfigService tests the Bridge with ConfigService integration

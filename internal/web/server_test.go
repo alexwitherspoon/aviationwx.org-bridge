@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/station"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/update"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/upload"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/station"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/update"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/upload"
 )
 
 // TestTimezoneUpdate tests the PUT /api/time endpoint

@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/queue"
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/scheduler"
-	timepkg "github.com/alexwitherspoon/AviationWX.org-Bridge/internal/time"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/queue"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/scheduler"
+	timepkg "github.com/alexwitherspoon/aviationwx-bridge/internal/time"
 )
 
 func TestExtractHealthIndicators_orchestratorRunning(t *testing.T) {

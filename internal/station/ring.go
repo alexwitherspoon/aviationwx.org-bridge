@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/bridgeapi"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/bridgeapi"
 )
 
 // OutboundWeatherMaxAge is how long failed weather POSTs may be retained.

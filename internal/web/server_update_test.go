@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/paths"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/paths"
 )
 
 const updateTriggerName = "trigger-update"

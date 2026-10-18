@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 func TestStationsCRUD(t *testing.T) {

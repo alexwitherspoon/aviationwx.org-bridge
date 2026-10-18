@@ -12,7 +12,7 @@ import (
 
 const (
 	// GitHub API URL for releases
-	releasesURL = "https://api.github.com/repos/alexwitherspoon/aviationwx.org-bridge/releases/latest"
+	releasesURL = "https://api.github.com/repos/alexwitherspoon/aviationwx-bridge/releases/latest"
 
 	// Check interval - check once per hour
 	defaultCheckInterval = time.Hour
