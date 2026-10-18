@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 func TestEcowittPollFixture(t *testing.T) {

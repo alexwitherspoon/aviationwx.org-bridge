@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alexwitherspoon/AviationWX.org-Bridge/internal/config"
+	"github.com/alexwitherspoon/aviationwx-bridge/internal/config"
 )
 
 const (
