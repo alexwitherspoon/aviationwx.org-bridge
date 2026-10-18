@@ -105,6 +105,12 @@ func TestParseEcowittTimeVal(t *testing.T) {
 			want: time.Date(2024, 11, 25, 20, 41, 16, 0, time.UTC),
 			ok:   true,
 		},
+		{
+			name: "compact form assumed UTC",
+			val:  "20240517125938",
+			want: time.Date(2024, 5, 17, 12, 59, 38, 0, time.UTC),
+			ok:   true,
+		},
 		{name: "empty", val: "", ok: false},
 		{name: "garbage", val: "not-a-time", ok: false},
 	}
