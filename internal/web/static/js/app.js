@@ -972,34 +972,40 @@ async function testStationPoll() {
         : ''}`;
             return;
         }
-        const transmitters = result.transmitters || [];
-        const select = document.getElementById('stTxid');
-        const prev = select?.value || '';
-        if (select) {
-            const iss = transmitters.filter((t) => t.data_structure_type === 1 || t.txid);
-            const seen = new Set();
-            const options = ['<option value="">— Select transmitter —</option>'];
-            iss.forEach((t) => {
-                if (seen.has(t.txid)) return;
-                seen.add(t.txid);
-                const label = `Transmitter ${t.txid}` +
-                    (t.temp_f != null ? ` · ${t.temp_f}°F` : '') +
-                    (t.rx_state != null ? ` · signal ${t.rx_state}` : '');
-                options.push(`<option value="${t.txid}">${escapeHtml(label)}</option>`);
-            });
-            select.innerHTML = options.join('');
-            if (prev && seen.has(Number(prev))) {
-                select.value = prev;
-            } else if (seen.size === 1) {
-                select.value = String([...seen][0]);
+        const isDavis = type === 'davis_weatherlink_live';
+        const transmitters = isDavis ? (result.transmitters || []) : [];
+        if (isDavis) {
+            const select = document.getElementById('stTxid');
+            const prev = select?.value || '';
+            if (select) {
+                const iss = transmitters.filter((t) => t.data_structure_type === 1 || t.txid);
+                const seen = new Set();
+                const options = ['<option value="">— Select transmitter —</option>'];
+                iss.forEach((t) => {
+                    if (seen.has(t.txid)) return;
+                    seen.add(t.txid);
+                    const label = `Transmitter ${t.txid}` +
+                        (t.temp_f != null ? ` · ${t.temp_f}°F` : '') +
+                        (t.rx_state != null ? ` · signal ${t.rx_state}` : '');
+                    options.push(`<option value="${t.txid}">${escapeHtml(label)}</option>`);
+                });
+                select.innerHTML = options.join('');
+                if (prev && seen.has(Number(prev))) {
+                    select.value = prev;
+                } else if (seen.size === 1) {
+                    select.value = String([...seen][0]);
+                }
             }
         }
         const ageFn = window.formatObservationAge || (() => '');
         const obsNote = result.observed_at
             ? `station time ${result.observed_at} (${ageFn(result.observed_at)})`
-            : 'no station timestamp (readings will not upload until the station reports time)';
+            : 'no gateway time (readings will not upload until the gateway reports time)';
+        const reachableNote = isDavis
+            ? `Station reachable · ${transmitters.length} transmitter record(s)`
+            : 'Gateway reachable';
         resultDiv.innerHTML = `
-            <div class="test-result success">✓ Station reachable · ${transmitters.length} transmitter record(s) · ${escapeHtml(obsNote)}</div>
+            <div class="test-result success">✓ ${reachableNote} · ${escapeHtml(obsNote)}</div>
             ${result.provider_meta?.raw
         ? `<pre class="station-raw-payload">${escapeHtml((window.formatRawPayload || ((r) => JSON.stringify(r, null, 2)))(result.provider_meta.raw))}</pre>`
         : ''}`;
