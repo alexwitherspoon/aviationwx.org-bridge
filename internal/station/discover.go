@@ -233,7 +233,7 @@ func discoverDavisHTTPProbe(ctx context.Context, targets []string, onFound func(
 		return
 	}
 	total := len(targets)
-	client := &http.Client{Timeout: probeHTTPTimeout}
+	client := NewLANClient(probeHTTPTimeout)
 	sem := make(chan struct{}, probeMaxConcurrency)
 	var (
 		wg       sync.WaitGroup
@@ -258,6 +258,7 @@ func discoverDavisHTTPProbe(ctx context.Context, targets []string, onFound func(
 			onProgress(n, total)
 		}
 	}
+scanLoop:
 	for _, ip := range targets {
 		if ctx.Err() != nil {
 			break
@@ -265,7 +266,7 @@ func discoverDavisHTTPProbe(ctx context.Context, targets []string, onFound func(
 		ip := ip
 		select {
 		case <-ctx.Done():
-			return
+			break scanLoop
 		case sem <- struct{}{}:
 		}
 		wg.Add(1)
