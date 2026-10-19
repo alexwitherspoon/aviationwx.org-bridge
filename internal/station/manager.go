@@ -50,6 +50,10 @@ type Manager struct {
 
 	hub *interceptorHub // nil when no interceptor stations
 
+	syncMu       sync.Mutex // serializes whole SyncFromConfig passes
+	mqttSources  map[string]*MQTTSource
+	mqttLastEmit map[string]time.Time // guarded by mu; paces MQTT at ≤1 Hz per station
+
 	// recentPayloads is an in-memory newest-first log for console (no disk).
 	recentMu       sync.Mutex
 	recentPayloads []PayloadLogEntry
@@ -102,6 +106,8 @@ func NewManager(cfg ManagerConfig) *Manager {
 		lastCatchupPost: make(map[string]time.Time),
 		uplink:          newWeatherUplink(),
 		lanFailLogAt:    make(map[string]time.Time),
+		mqttSources:     make(map[string]*MQTTSource),
+		mqttLastEmit:    make(map[string]time.Time),
 		catchupStop:     make(chan struct{}),
 		catchupDone:     make(chan struct{}),
 	}
@@ -113,8 +119,14 @@ func NewManager(cfg ManagerConfig) *Manager {
 	return m
 }
 
-// SyncFromConfig starts, restarts, or stops poll workers and interceptor listen routes.
+// SyncFromConfig starts, restarts, or stops poll workers, interceptor listen
+// routes, and MQTT subscriptions. Serialized with syncMu so concurrent config
+// notifications cannot interleave and let a stale snapshot resurrect a removed
+// station.
 func (m *Manager) SyncFromConfig() {
+	m.syncMu.Lock()
+	defer m.syncMu.Unlock()
+
 	stations := m.cfgService.ListStations()
 	wanted := make(map[string]config.Station, len(stations))
 	for _, st := range stations {
@@ -192,6 +204,7 @@ func (m *Manager) SyncFromConfig() {
 	m.postMu.Unlock()
 
 	m.syncInterceptorHub(wanted)
+	m.syncMQTTSources(wanted)
 }
 
 // syncInterceptorHub rebuilds the shared interceptor listener (own locking).
@@ -316,7 +329,8 @@ func interceptorRoutingError(msg string) bool {
 		strings.Contains(msg, "interceptor listen failed")
 }
 
-// Stop halts all poll workers, the interceptor listener, and catch-up flush.
+// Stop halts all poll workers, the interceptor listener, MQTT subscriptions,
+// and catch-up flush.
 func (m *Manager) Stop() {
 	m.stopOnce.Do(func() {
 		m.runCancel()
@@ -331,12 +345,20 @@ func (m *Manager) Stop() {
 	}
 	hub := m.hub
 	m.hub = nil
+	mqtt := make([]*MQTTSource, 0, len(m.mqttSources))
+	for id, src := range m.mqttSources {
+		mqtt = append(mqtt, src)
+		delete(m.mqttSources, id)
+	}
 	m.mu.Unlock()
 	for _, w := range toStop {
 		w.stop()
 	}
 	if hub != nil {
 		hub.stop()
+	}
+	for _, src := range mqtt {
+		src.Stop()
 	}
 	<-m.catchupDone
 }
