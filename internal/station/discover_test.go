@@ -76,9 +76,30 @@ func TestProbeDavisURLAcceptsFixture(t *testing.T) {
 }
 
 func TestDiscoverStationsUnsupportedType(t *testing.T) {
-	_, err := DiscoverStations(context.Background(), DiscoverOptions{Type: "ecowitt"})
+	_, err := DiscoverStations(context.Background(), DiscoverOptions{Type: "mqtt"})
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestProbeEcowittURLAcceptsFixture(t *testing.T) {
+	fixture := []byte(`{"common_list":[{"id":"0x02","val":"1"}],"wh25":[{"intemp":"20"}]}`)
+	mux := http.NewServeMux()
+	mux.HandleFunc(ecowittLivedataPath, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(fixture)
+	})
+	mux.HandleFunc(ecowittVersionPath, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"version":"Version: GW1100A_V1.0","platform":"ecowitt"}`))
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	c, ok := probeEcowittURL(context.Background(), srv.Client(), srv.URL+ecowittLivedataPath)
+	if !ok {
+		t.Fatal("expected ok")
+	}
+	if !strings.Contains(c.Name, "GW1100A") {
+		t.Fatalf("name = %q", c.Name)
 	}
 }
 
@@ -131,6 +152,30 @@ func TestDiscoverStationsStreamEmitsProgress(t *testing.T) {
 	last := progress[len(progress)-1]
 	if last.Done != last.Total || last.Total != 2 {
 		t.Fatalf("last progress = %+v", last)
+	}
+}
+
+func TestDiscoverEcowittStreamEmitsPhases(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	var types []string
+	var notes []string
+	err := DiscoverStationsStream(ctx, DiscoverOptions{Type: ProviderEcowittGateway}, func(ev DiscoverEvent) {
+		types = append(types, ev.Type)
+		if ev.Type == "note" {
+			notes = append(notes, ev.Message)
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(types) == 0 || types[len(types)-1] != "done" {
+		t.Fatalf("events = %v", types)
+	}
+	joined := strings.Join(notes, " ")
+	if !strings.Contains(joined, "HTTP") {
+		t.Fatalf("expected HTTP-only discovery note, got %v", notes)
 	}
 }
 
