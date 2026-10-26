@@ -1,4 +1,4 @@
-FROM golang:1.27.2-alpine3.23 AS builder
+FROM golang:1.27.3-alpine3.23 AS builder
 WORKDIR /src
 RUN printf 'module apimock\n\ngo 1.27.2\n' > go.mod
 COPY docker/bridge-api-mock/main.go ./main.go
