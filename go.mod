@@ -1,6 +1,6 @@
 module github.com/alexwitherspoon/aviationwx-bridge
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/beevik/ntp v1.6.0
